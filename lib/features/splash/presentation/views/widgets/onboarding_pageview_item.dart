@@ -1,5 +1,6 @@
 import 'package:athr/core/utils/app_assets.dart';
 import 'package:athr/core/utils/app_styles.dart';
+import 'package:athr/core/widgets/header_item.dart';
 import 'package:athr/features/splash/data/onboardind_model.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
@@ -13,15 +14,7 @@ class OnboardingPageviewItem extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 25, vertical: 20),
-          decoration: BoxDecoration(
-            color: onboardingModel.color,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Icon(onboardingModel.icon, color: Colors.white, size: 35),
-        ),
-
+        HeaderItem(icone: onboardingModel.icon, color: onboardingModel.color),
         const Gap(30),
         Text(onboardingModel.title, style: AppStyles.styleMedium36(context)),
         const Gap(12),
