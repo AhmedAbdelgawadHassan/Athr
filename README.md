@@ -101,7 +101,7 @@ flutter run
 | Layer | Technology |
 |---|---|
 | Framework | Flutter / Dart |
-| State Management | Riverpod |
+| State Management | Bloc |
 | Local Storage | Hive |
 | Audio | just_audio |
 | Prayer Times | adhan-dart |
