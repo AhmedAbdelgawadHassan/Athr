@@ -22,4 +22,8 @@ class Prefs {
   static String getString(String key) {
     return _instance.getString(key) ?? "";
   }
+
+
+
+
 }

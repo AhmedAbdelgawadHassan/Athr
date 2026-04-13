@@ -6,7 +6,7 @@ import 'package:athr/core/services/shared_prefrence.dart';
 import 'package:athr/core/utils/app_assets.dart';
 import 'package:athr/core/utils/app_colors.dart';
 import 'package:athr/core/utils/app_styles.dart';
-import 'package:athr/features/language&location/presentation/view/language_view.dart';
+import 'package:athr/features/home/presentation/views/home_view.dart';
 import 'package:athr/features/splash/presentation/views/onboarding_view.dart';
 import 'package:athr/features/splash/presentation/views/widgets/customLinearProgressIndicator.dart';
 import 'package:flutter/material.dart';
@@ -60,7 +60,7 @@ class _SplashViewState extends State<SplashView>
     if (mounted) {
   Prefs.getBool(kIsOnboardingSeen)?Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => LanguageView()),
+              MaterialPageRoute(builder: (context) => HomeView()),
             ):  Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => OnboardingView()),

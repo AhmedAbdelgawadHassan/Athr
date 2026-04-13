@@ -2,5 +2,6 @@
   "title": "Welcome",
   "next": "Next",
   "skip": "Skip",
-  "start": "Start Now"
+  "start": "Start Now",
+  "go" : "Go"
 }

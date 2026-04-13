@@ -19,4 +19,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get start => 'ابدأ الآن';
+
+  @override
+  String get go => 'اذهب';
 }

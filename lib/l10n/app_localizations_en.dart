@@ -19,4 +19,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get start => 'Start Now';
+
+  @override
+  String get go => 'Go';
 }
