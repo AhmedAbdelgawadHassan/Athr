@@ -25,7 +25,7 @@ class OnboardingPageviewItem extends StatelessWidget {
           textAlign: TextAlign.center,
           style: AppStyles.styleRegular18(
             context,
-          ).copyWith(color: Colors.black.withOpacity(0.5)),
+          ).copyWith(color: Colors.black.withValues(alpha: 0.5)),
         ),
       ],
     );

@@ -8,7 +8,7 @@ import 'package:athr/core/utils/app_colors.dart';
 import 'package:athr/core/utils/app_styles.dart';
 import 'package:athr/features/home/presentation/views/home_view.dart';
 import 'package:athr/features/splash/presentation/views/onboarding_view.dart';
-import 'package:athr/features/splash/presentation/views/widgets/customLinearProgressIndicator.dart';
+import 'package:athr/features/splash/presentation/views/widgets/custom_linear_progress_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
@@ -156,7 +156,9 @@ class _SplashViewState extends State<SplashView>
                       ),
                     ),
                     const Spacer(),
-                    Customlinearprogressindicator(), // linear progress indicator
+                    Customlinearprogressindicator(
+                      padding: 100,
+                    ), // linear progress indicator
                     const Spacer(),
                   ],
                 ),

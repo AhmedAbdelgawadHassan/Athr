@@ -24,7 +24,7 @@ class DotsIndicator extends StatelessWidget {
                 ? currentIndex == 1
                       ? AppColors.secondaryColor
                       : AppColors.primaryColor
-                : Colors.grey.withOpacity(0.5),
+                : Colors.grey.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(20),
           ),
         );

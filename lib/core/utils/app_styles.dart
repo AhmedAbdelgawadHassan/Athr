@@ -12,6 +12,11 @@ abstract class AppStyles // App Styles taked from Style Organizer pluggin
     );
   }
 
+static TextStyle styleMedium12(context) {
+  return TextStyle(
+    fontSize: getResponsiveFontSize(context, baseFontSize: 12),
+    fontWeight: FontWeight.w500);
+}
 
 
  static TextStyle styleRegular18(context) {
@@ -20,6 +25,11 @@ abstract class AppStyles // App Styles taked from Style Organizer pluggin
       fontWeight: FontWeight.w400);
  }
 
+static TextStyle styleMedium24(context) {
+  return TextStyle(
+    fontSize: getResponsiveFontSize(context, baseFontSize: 24)
+    ,fontWeight: FontWeight.w500,);
+}
 
  static  TextStyle styleMedium16(context){
     return  TextStyle(

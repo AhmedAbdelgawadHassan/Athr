@@ -1,6 +1,6 @@
 import 'package:athr/core/utils/app_colors.dart';
 import 'package:athr/core/utils/app_styles.dart';
-import 'package:athr/features/language&location/data/location_listtile_model.dart';
+import 'package:athr/features/languageAndlocation/data/location_listtile_model.dart';
 import 'package:flutter/material.dart';
 
 class LocationListtile extends StatelessWidget {

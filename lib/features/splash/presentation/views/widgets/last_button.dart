@@ -9,7 +9,7 @@ class Lastbutton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        side: BorderSide(color: Colors.black.withOpacity(0.25)),
+        side: BorderSide(color: Colors.black.withValues(alpha: 0.25)),
         backgroundColor: Colors.white,
         shape:CircleBorder(),
         padding: const EdgeInsets.all(15)

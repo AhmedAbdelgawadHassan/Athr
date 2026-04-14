@@ -4,13 +4,13 @@ import 'package:athr/constants.dart';
 import 'package:athr/core/functions/circle_drawer.dart';
 import 'package:athr/core/services/shared_prefrence.dart';
 import 'package:athr/core/utils/app_colors.dart';
-import 'package:athr/features/language&location/presentation/view/language_view.dart';
+import 'package:athr/features/languageAndlocation/presentation/view/language_view.dart';
 import 'package:athr/features/splash/data/onboardind_model.dart';
 import 'package:athr/features/splash/presentation/views/widgets/dots_indicator.dart';
-import 'package:athr/features/splash/presentation/views/widgets/lastButton.dart';
-import 'package:athr/features/splash/presentation/views/widgets/nextButton.dart';
+import 'package:athr/features/splash/presentation/views/widgets/last_button.dart';
+import 'package:athr/features/splash/presentation/views/widgets/next_button.dart';
 import 'package:athr/features/splash/presentation/views/widgets/onboarding_pageview_item.dart';
-import 'package:athr/features/splash/presentation/views/widgets/skipButton.dart';
+import 'package:athr/features/splash/presentation/views/widgets/skip_button.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gap/gap.dart';
@@ -99,7 +99,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                 children: [
                   Spacer(),
                   AspectRatio(
-                    aspectRatio: 1.4,
+                    aspectRatio: 1.2,
                     child: PageView.builder(
                       physics: NeverScrollableScrollPhysics(),
                       controller: pageController,
@@ -116,6 +116,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                       },
                     ),
                   ),
+                  Gap(20),
                   DotsIndicator(currentIndex: currentIndex),
                   Spacer(),
                   Row(
