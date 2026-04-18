@@ -29,6 +29,7 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
   void initState() {
     super.initState();
     _clockTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      // update time every 30 seconds
       if (!mounted) return;
       setState(() {
         _now = DateTime.now();
@@ -39,6 +40,8 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
   @override
   void dispose() {
     _clockTimer.cancel();
+
+    /// cancel timer
     super.dispose();
   }
 
@@ -60,8 +63,11 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
       if (parsed == null) continue;
 
       if (_now.isBefore(parsed)) {
+        // check if current time is before parsed time
         final previousIndex = i == 0 ? prayers.length - 1 : i - 1;
-        final previousParsed = _parsePrayerTimeToday(prayers[previousIndex].time);
+        final previousParsed = _parsePrayerTimeToday(
+          prayers[previousIndex].time,
+        );
         final previousTime = previousIndex == prayers.length - 1
             ? (previousParsed ?? parsed).subtract(const Duration(days: 1))
             : (previousParsed ?? parsed.subtract(const Duration(hours: 1)));
@@ -85,7 +91,8 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
       name: firstPrayer.name,
       time: firstPrayer.time,
       nextTime: firstParsed.add(const Duration(days: 1)),
-      previousTime: prevParsed ?? firstParsed.subtract(const Duration(hours: 1)),
+      previousTime:
+          prevParsed ?? firstParsed.subtract(const Duration(hours: 1)),
     );
   }
 
@@ -127,8 +134,13 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
                 if (info != null) {
                   title = 'صلاة ${info.name}';
                   time = info.time;
-                  remainingText = _formatRemaining(info.nextTime.difference(_now));
-                  progressValue = _progressBetween(info.previousTime, info.nextTime);
+                  remainingText = _formatRemaining(
+                    info.nextTime.difference(_now),
+                  );
+                  progressValue = _progressBetween(
+                    info.previousTime,
+                    info.nextTime,
+                  );
                 } else {
                   remainingText = 'تعذر حساب الصلاة القادمة';
                 }
@@ -182,7 +194,9 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
                                 width: 7,
                                 height: 7,
                                 decoration: BoxDecoration(
-                                  color: AppColors.primaryColor.withValues(alpha: 0.6),
+                                  color: AppColors.primaryColor.withValues(
+                                    alpha: 0.6,
+                                  ),
                                   shape: BoxShape.circle,
                                 ),
                               ),

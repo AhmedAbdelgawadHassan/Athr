@@ -31,7 +31,7 @@ class LanguageListtile extends StatelessWidget {
         ),
         child: Icon(FontAwesomeIcons.check.data,color: Colors.white,size: 14,),
     
-      ):null
+      ):SizedBox()
     );
   }
 }

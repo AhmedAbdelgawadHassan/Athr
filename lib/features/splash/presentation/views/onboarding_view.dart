@@ -5,14 +5,13 @@ import 'package:athr/core/functions/circle_drawer.dart';
 import 'package:athr/core/services/shared_prefrence.dart';
 import 'package:athr/core/utils/app_colors.dart';
 import 'package:athr/features/languageAndlocation/presentation/view/language_view.dart';
-import 'package:athr/features/splash/data/onboardind_model.dart';
+import 'package:athr/features/splash/data/onboarding_model.dart';
 import 'package:athr/features/splash/presentation/views/widgets/dots_indicator.dart';
 import 'package:athr/features/splash/presentation/views/widgets/last_button.dart';
 import 'package:athr/features/splash/presentation/views/widgets/next_button.dart';
 import 'package:athr/features/splash/presentation/views/widgets/onboarding_pageview_item.dart';
 import 'package:athr/features/splash/presentation/views/widgets/skip_button.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gap/gap.dart';
 
 class OnboardingView extends StatefulWidget {
@@ -25,37 +24,12 @@ class OnboardingView extends StatefulWidget {
 class _OnboardingViewState extends State<OnboardingView> {
   int currentIndex = 0;
   final PageController pageController = PageController();
-  final List<OnboardingModel> onboardingItemList = [
-    OnboardingModel(
-      title: 'القرآن الكريم',
-      subtitle:
-          'اقرأ القرآن الكريم بخط واضح وتصميم جميل مع إمكانية الاستماع للتلاوات',
-      icon: FontAwesomeIcons.bookQuran.data,
-      color: AppColors.primaryColor,
-    ),
-    OnboardingModel(
-      title: 'مواقيت الصلاة',
-      subtitle: 'تنبيهات دقيقة لمواقيت الصلاة حسب موقعك مع صوت الأذان',
-      icon: FontAwesomeIcons.clock.data,
-      color: AppColors.secondaryColor,
-    ),
-    OnboardingModel(
-      title: 'رفيقك الروحاني',
-      subtitle: 'تذكيرات يومية، أذكار، تسبيح، وكل ما تحتاجه في رحلتك الإيمانية',
-      icon: FontAwesomeIcons.heart.data,
-      color: AppColors.primaryColor,
-    ),
-  ];
 
-  @override
-  void initState() {
-    super.initState();
-  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: Stack(
           children: [
@@ -64,8 +38,8 @@ class _OnboardingViewState extends State<OnboardingView> {
               right: -190,
               child: drawCircle(
                 radius: 200,
-                borderColor: Colors.grey.withOpacity(0.05),
-                backgroundColor: Colors.white,
+                borderColor: Colors.grey.withOpacity(0.1),
+                backgroundColor: Colors.transparent,
                 borderWidth: 5,
               ),
             ),
@@ -74,28 +48,26 @@ class _OnboardingViewState extends State<OnboardingView> {
               left: -190,
               child: drawCircle(
                 radius: 200,
-                borderColor: Colors.grey.withOpacity(0.05),
-                backgroundColor: Colors.white,
+                borderColor: Colors.grey.withOpacity(0.1),
+                backgroundColor: Colors.transparent,
                 borderWidth: 5,
               ),
             ),
             Positioned(
               top: 0,
               bottom: 0,
-              left: 35,
-              right: 35,
+              left: 10,
+              right: 10,
               child: drawCircle(
                 radius: 100,
-                borderColor: Colors.grey.withOpacity(0.05),
-                backgroundColor: Colors.white,
+                borderColor: Colors.grey.withOpacity(0.1),
+                backgroundColor: Colors.transparent,
                 borderWidth: 5,
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Spacer(),
                   AspectRatio(
@@ -108,10 +80,10 @@ class _OnboardingViewState extends State<OnboardingView> {
                           currentIndex = index;
                         });
                       },
-                      itemCount: onboardingItemList.length,
+                      itemCount:OnboardingModel.onboardingItemList.length,
                       itemBuilder: (context, index) {
                         return OnboardingPageviewItem(
-                          onboardingModel: onboardingItemList[index],
+                          onboardingModel:   OnboardingModel.onboardingItemList[index],
                         );
                       },
                     ),
@@ -123,7 +95,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                     children: [
                       Skipbutton(
                         onPressed: () {
-                          Prefs.setBool(kIsOnboardingSeen, true);
+                          Prefs.setBool(kIsOnboardingSeen, true); 
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
@@ -138,7 +110,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                           : Lastbutton(
                               onPressed: () {
                                 pageController.previousPage(
-                                  duration: Duration(milliseconds: 300),
+                                  duration: Duration(milliseconds: 400),
                                   curve: Curves.easeIn,
                                 );
                               },
@@ -159,7 +131,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                                  Prefs.setBool(kIsOnboardingSeen, true)
                               }
                                  : pageController.nextPage(
-                                  duration: Duration(milliseconds: 300),
+                                  duration: Duration(milliseconds: 400),
                                   curve: Curves.easeIn,
                                 );
                         

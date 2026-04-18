@@ -31,7 +31,7 @@ class _SplashViewState extends State<SplashView>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 2500),
       vsync: this,
     );
 
@@ -58,10 +58,12 @@ class _SplashViewState extends State<SplashView>
   Future<void> _navigate() async {
     await Future.delayed(const Duration(seconds: 4));
     if (mounted) {
-  Prefs.getBool(kIsOnboardingSeen)?Navigator.pushReplacement(
+      Prefs.getBool(kIsOnboardingSeen)
+          ? Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => HomeView()),
-            ):  Navigator.pushReplacement(
+            )
+          : Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => OnboardingView()),
             );
@@ -122,7 +124,7 @@ class _SplashViewState extends State<SplashView>
                     ScaleTransition(
                       scale: _scale,
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(16),
                         child: Image.asset(
                           AppAssets.appLogo,
                           width: 110,

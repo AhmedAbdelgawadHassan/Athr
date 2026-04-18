@@ -29,13 +29,14 @@ class HomeAppbar extends StatelessWidget {
           ],
         ),
         Spacer(),
-        InkWell(
-          onTap: (){},
-          child: Icon(Icons.dark_mode_outlined,color: Colors.white,)),
-        Gap(25),
-        InkWell(
-          onTap: (){},
-          child: Icon(Icons.settings_outlined,color: Colors.white,)),
+   
+           IconButton(
+            onPressed: (){},
+            icon: Icon(Icons.dark_mode_outlined,color: Colors.white,)),
+        Gap(10),
+        IconButton(
+          onPressed: (){},
+          icon: Icon(Icons.settings_outlined,color: Colors.white,)),
       ],
     );
   }

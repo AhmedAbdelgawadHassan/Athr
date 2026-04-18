@@ -19,12 +19,12 @@ class Languagelisttileitemmodel {
       countryFlag: AppAssets.sudia,
     ),
     Languagelisttileitemmodel(
-      title: "الأنجليزية",
+      title: "English",
       subtitle: 'English',
       countryFlag: AppAssets.usa,
     ),
     Languagelisttileitemmodel(
-      title: 'الفرنسية',
+      title: 'Français',
       subtitle: 'French',
       countryFlag: AppAssets.france,
     ),

@@ -14,7 +14,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Prefs.init();
+  await Prefs.init(); // initialize shared Preference
 
   runApp(const AthrApp());
 }
@@ -26,11 +26,9 @@ class AthrApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider(create: (_) => LocaleCubit()),  // cubit for Language
         BlocProvider(
-          create: (_) => LocaleCubit(),
-        ),
-        BlocProvider(
-          create: (_) => PrayerTimeCubit(
+          create: (_) => PrayerTimeCubit(   // cubit for Prayers Time
             InitialPrayerTimeState(),
             prayerTimeRepo: PrayerTimeRepoImpl(
               prayerTimeService: PrayerTimeService(dio: Dio()),
@@ -38,10 +36,7 @@ class AthrApp extends StatelessWidget {
           ),
         ),
       ],
-      child: DevicePreview(
-        enabled: false,
-        builder: (context) => const Athr(),
-      ),
+      child: DevicePreview(enabled: false, builder: (context) => const Athr()),
     );
   }
 }

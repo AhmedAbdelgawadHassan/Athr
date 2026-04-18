@@ -1,5 +1,7 @@
 import 'package:athr/core/services/location_service.dart';
 import 'package:athr/features/home/data/models/home_item_model.dart';
+import 'package:athr/features/home/data/repos/aya_repo_impl.dart';
+import 'package:athr/features/home/presentation/manager/cubits/aya_cubit/aya_cubit.dart';
 import 'package:athr/features/home/presentation/manager/cubits/prayer_time_cubit.dart/prayer_time_cubit.dart';
 import 'package:athr/features/home/presentation/views/widgets/home_item.dart';
 import 'package:athr/features/home/presentation/views/widgets/home_top_section.dart';
@@ -8,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomeView extends StatefulWidget {
- const HomeView({super.key});
+  const HomeView({super.key});
 
   @override
   State<HomeView> createState() => _HomeViewState();
@@ -16,21 +18,23 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   Future<void> _loadData() async {
-  final location = await LocationService.getLocation();
+    final location = await LocationService.getLocation();
 
-  if (location != null && mounted) {
-    context.read<PrayerTimeCubit>().getPrayerTime(
-      latitude: location.latitude,
-      longitude: location.longitude,
-    );
+    if (location != null && mounted) {
+      context.read<PrayerTimeCubit>().getPrayerTime(
+        latitude: location.latitude,
+        longitude: location.longitude,
+      );
+    }
   }
-}
- 
- @override
+
+  @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-    _loadData();
-  });
+      // "استنى لما الشاشة تترسم الأول، وبعد كده نفّذ الكود اللي جوه"
+      // this method is called after the first frame is built and displayed on the screen
+      _loadData(); // load data after the first screen is displayed
+    });
     super.initState();
   }
 
@@ -52,7 +56,9 @@ class _HomeViewState extends State<HomeView> {
                     bottom: -overlapOffset,
                     left: 15,
                     right: 15,
-                    child: TodayAyaContainer(),
+                    child: BlocProvider(
+                      create: (context) => AyahCubit(AyahRepoImpl())..getTodayAyah(),/// call getTodayAyah() method
+                      child: TodayAyaContainer()),
                   ),
                 ],
               ),
@@ -65,14 +71,16 @@ class _HomeViewState extends State<HomeView> {
                   child: GridView.builder(
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
-                    itemCount:  HomeItemModel.homeItemModels.length,
+                    itemCount: HomeItemModel.homeItemModels.length,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       mainAxisSpacing: 10,
+                      childAspectRatio: 1.25,
                       crossAxisSpacing: 10,
                     ),
-                    itemBuilder: (context, index) =>
-                        HomeItem(homeItemModel: HomeItemModel.homeItemModels[index]),
+                    itemBuilder: (context, index) => HomeItem(
+                      homeItemModel: HomeItemModel.homeItemModels[index],
+                    ),
                   ),
                 ),
               ),

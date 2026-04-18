@@ -39,9 +39,9 @@ class _LocationViewState extends State<LocationView> {
         }
 
         if (state is FailurePrayerTimeState) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.errorMessage)));
         }
       },
       child: Scaffold(
@@ -75,14 +75,11 @@ class _LocationViewState extends State<LocationView> {
                 Column(
                   children: [
                     const Gap(20),
-
                     HeaderItem(
                       icone: Icons.location_on_outlined,
                       color: AppColors.primaryColor,
                     ),
-
                     const Gap(10),
-
                     Text(
                       'تحديد الموقع',
                       style: AppStyles.styleMedium30(context),
@@ -93,16 +90,15 @@ class _LocationViewState extends State<LocationView> {
                     Text(
                       'نحتاج إلى موقعك لحساب أوقات الصلاة الدقيقة في منطقتك وإظهار المساجد القريبة منك',
                       textAlign: TextAlign.center,
-                      style: AppStyles.styleRegular16(context)
-                          .copyWith(color: const Color(0xff6B6B6B)),
+                      style: AppStyles.styleRegular16(
+                        context,
+                      ).copyWith(color: const Color(0xff6B6B6B)),
                     ),
-
                     const Gap(20),
-
                     Expanded(
                       child: ListView.builder(
-                        itemCount: LocationListtileModel
-                            .locationListtilemodels.length,
+                        itemCount:
+                            LocationListtileModel.locationListtilemodels.length,
                         itemBuilder: (context, index) {
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 7),
@@ -116,11 +112,11 @@ class _LocationViewState extends State<LocationView> {
                     ),
                     LocationPermitionButton(
                       onPressed: () async {
-                        final location =
-                            await LocationService.getLocation();
+                        Prefs.setBool(kIsOnboardingSeen, true);
+                        final location = await LocationService.getLocation();
                         if (location != null) {
                           Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (context) => HomeView(),)
+                            MaterialPageRoute(builder: (context) => HomeView()),
                           );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -136,28 +132,27 @@ class _LocationViewState extends State<LocationView> {
                     ),
 
                     const Gap(10),
-
                     TextButton(
                       onPressed: () {
                         Prefs.setBool(kIsOnboardingSeen, true);
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const HomeView(),
-                          ),
+                          MaterialPageRoute(builder: (_) => const HomeView()),
                         );
                       },
                       child: Text(
                         'تخطي الأن',
-                        style: AppStyles.styleMedium16(context)
-                            .copyWith(color: const Color(0xff6B6B6B)),
+                        style: AppStyles.styleMedium16(
+                          context,
+                        ).copyWith(color: const Color(0xff6B6B6B)),
                       ),
                     ),
 
                     Text(
                       'يمكنك تغيير هذا الإعداد لاحقًا من الإعدادات',
-                      style: AppStyles.styleRegular12(context)
-                          .copyWith(color: const Color(0xff6B6B6B)),
+                      style: AppStyles.styleRegular12(
+                        context,
+                      ).copyWith(color: const Color(0xff6B6B6B)),
                     ),
 
                     const Gap(20),

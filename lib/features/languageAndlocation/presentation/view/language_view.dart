@@ -52,14 +52,8 @@ class _LanguageViewState extends State<LanguageView> {
                 borderWidth: 5,
               ),
             ),
-           
           
-              
-              
-              
-              
               Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const Gap(20),
                 HeaderItem(icone: Icons.language, color: AppColors.primaryColor),
@@ -69,9 +63,7 @@ class _LanguageViewState extends State<LanguageView> {
                 Text(
                   'Select Your Preferred Language',
                   textAlign: TextAlign.center,
-                  style: AppStyles.styleRegular16(
-                    context,
-                  ).copyWith(color: Color(0xff6B6B6B)),
+                  style: AppStyles.styleRegular16(context).copyWith(color: Color(0xff6B6B6B)),
                 ),
                 Gap(20),
                 Expanded(
@@ -109,12 +101,10 @@ class _LanguageViewState extends State<LanguageView> {
                   },
                   child: Text(
                    'متابعة',
-                    style: AppStyles.styleMedium18(
-                      context,
-                    ).copyWith(color: Colors.white),
+                    style: AppStyles.styleMedium18(context).copyWith(color: Colors.white),
                   ),
                 ),
-                Gap(50),
+                Gap(30),
               ],
             ),
           ]),

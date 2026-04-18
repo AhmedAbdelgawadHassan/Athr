@@ -10,7 +10,9 @@ class HomeItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: homeItemModel.onTap,
+      onTap:() {
+        Navigator.push(context, MaterialPageRoute(builder: (context) =>homeItemModel.navigationScreen ,));
+      },
       child: Container(
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(

@@ -39,7 +39,7 @@ class LocationService {
     final prefs = await SharedPreferences.getInstance();
 
     await prefs.setDouble("latitude", position.latitude);
-
+    
     await prefs.setDouble("longitude", position.longitude);
 
     return position;
