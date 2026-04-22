@@ -21,7 +21,7 @@ class HomeAppbar extends StatelessWidget {
             ),
             const Gap(5),
             Text(
-              'سلام عليكم ورحمة الله وبركاته',
+             'أثر... حيث تتحول النوايا إلى أعمال خالدة',
               style: AppStyles.styleRegular14(
                 context,
               ).copyWith(color: Colors.white),

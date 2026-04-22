@@ -45,5 +45,7 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSUserNotificationUsageDescription</key>
+	<string>نستخدم الإشعارات لتذكيرك بالمواعيد التي تختارها.</string>
 </dict>
 </plist>

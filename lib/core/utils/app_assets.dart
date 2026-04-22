@@ -10,5 +10,7 @@ abstract class AppAssets {
   static const String asr = 'assets/images/asr.png';
   static const String magreb = 'assets/images/magreb.png';
   static const String eshaa = 'assets/images/eshaa.png';
+  static const String basmala = 'assets/images/Basmala.png';
+  static const String suraTopCover = 'assets/images/888-02.png';
   
 }

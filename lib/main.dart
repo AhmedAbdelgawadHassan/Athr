@@ -1,3 +1,4 @@
+import 'package:athr/core/services/notification_service.dart';
 import 'package:athr/core/services/prayer_time_service.dart';
 import 'package:athr/core/services/shared_prefrence.dart';
 import 'package:athr/features/home/data/repos/prayer_time_repo_impl.dart';
@@ -10,11 +11,16 @@ import 'package:device_preview/device_preview.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Prefs.init(); // initialize shared Preference
+  await Hive.initFlutter(); // initialize Hive
+
+  await Hive.openBox('reminders'); // open reminders box
+  await NotificationService.instance.init();
 
   runApp(const AthrApp());
 }
@@ -26,9 +32,10 @@ class AthrApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => LocaleCubit()),  // cubit for Language
+        BlocProvider(create: (_) => LocaleCubit()), // cubit for Language
         BlocProvider(
-          create: (_) => PrayerTimeCubit(   // cubit for Prayers Time
+          create: (_) => PrayerTimeCubit(
+            // cubit for Prayers Time
             InitialPrayerTimeState(),
             prayerTimeRepo: PrayerTimeRepoImpl(
               prayerTimeService: PrayerTimeService(dio: Dio()),

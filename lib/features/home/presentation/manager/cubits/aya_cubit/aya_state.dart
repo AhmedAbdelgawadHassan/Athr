@@ -1,4 +1,4 @@
-import 'package:athr/features/home/data/models/ayaModel.dart';
+import 'package:athr/features/home/data/models/aya_model.dart';
 
 abstract class AyahState {}
 

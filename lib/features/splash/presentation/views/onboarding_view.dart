@@ -34,23 +34,23 @@ class _OnboardingViewState extends State<OnboardingView> {
         child: Stack(
           children: [
             Positioned(
-              top: -200,
+              top: -250,
               right: -190,
               child: drawCircle(
                 radius: 200,
                 borderColor: Colors.grey.withOpacity(0.1),
                 backgroundColor: Colors.transparent,
-                borderWidth: 5,
+                borderWidth: 4,
               ),
             ),
             Positioned(
-              bottom: -200,
+              bottom: -250,
               left: -190,
               child: drawCircle(
                 radius: 200,
                 borderColor: Colors.grey.withOpacity(0.1),
                 backgroundColor: Colors.transparent,
-                borderWidth: 5,
+                borderWidth: 4,
               ),
             ),
             Positioned(
@@ -62,7 +62,7 @@ class _OnboardingViewState extends State<OnboardingView> {
                 radius: 100,
                 borderColor: Colors.grey.withOpacity(0.1),
                 backgroundColor: Colors.transparent,
-                borderWidth: 5,
+                borderWidth: 4,
               ),
             ),
             Padding(

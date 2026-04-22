@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:athr/features/home/data/models/ayaModel.dart';
+import 'package:athr/features/home/data/models/aya_model.dart';
 import 'package:athr/features/home/data/repos/aya_repo.dart';
 import 'package:flutter/services.dart';
 

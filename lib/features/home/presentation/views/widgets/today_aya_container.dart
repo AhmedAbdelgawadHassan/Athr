@@ -100,9 +100,9 @@ class _TodayAyaContainerState extends State<TodayAyaContainer> {
           right: 9,
           child: drawCircle(
             radius: 35,
-            borderColor: Color(0xffD4AF37).withValues(alpha: 0.1),
+            borderColor: Color(0xffD4AF37).withValues(alpha: 0.2),
             backgroundColor: Colors.transparent,
-            borderWidth: 10,
+            borderWidth: 6,
           ),
         ),
         Positioned(
@@ -110,9 +110,9 @@ class _TodayAyaContainerState extends State<TodayAyaContainer> {
           left: 9,
           child: drawCircle(
             radius: 35,
-            borderColor: Color(0xffD4AF37).withValues(alpha: 0.1),
+            borderColor: Color(0xffD4AF37).withValues(alpha: 0.2),
             backgroundColor: Colors.transparent,
-            borderWidth: 10,
+            borderWidth: 6,
           ),
         ),
       ],

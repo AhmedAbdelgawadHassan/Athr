@@ -1,6 +1,7 @@
 import 'package:athr/core/utils/app_styles.dart';
 import 'package:athr/features/home/data/models/home_item_model.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:gap/gap.dart';
 
 class HomeItem extends StatelessWidget {
@@ -11,7 +12,12 @@ class HomeItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap:() {
-        Navigator.push(context, MaterialPageRoute(builder: (context) =>homeItemModel.navigationScreen ,));
+        Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => homeItemModel.buildNavigationScreen(),
+          ),
+        );
       },
       child: Container(
         padding: EdgeInsets.all(16),
@@ -29,7 +35,7 @@ class HomeItem extends StatelessWidget {
                 color: homeItemModel.color,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(homeItemModel.icon, color: Colors.white, size: 30),
+              child: _HomeItemIcon(icon: homeItemModel.icon),
             ),
             const Gap(12),
              Text(homeItemModel.title, style: AppStyles.styleMedium18(context)),
@@ -44,5 +50,25 @@ class HomeItem extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _HomeItemIcon extends StatelessWidget {
+  const _HomeItemIcon({required this.icon});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final dir = Directionality.maybeOf(context) ?? TextDirection.rtl;
+    if (icon.fontPackage == 'font_awesome_flutter') {
+      return FaIcon(
+        FaIconData(icon),
+        color: Colors.white,
+        size: 30,
+        textDirection: dir,
+      );
+    }
+    return Icon(icon, color: Colors.white, size: 30);
   }
 }

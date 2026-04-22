@@ -54,35 +54,23 @@ class PrayerTimeItemModel {
     ];
   }
 
-  /// 🔹 تنظيف + تعديل + تحويل 12 ساعة
+  /// Clean API time text and keep unambiguous 24h format.
   static String _formatTime(String time, {bool isFajr = false}) {
     try {
-     // clean the time from any additional text like EET or any other text 
-     // اي مسافه فاضيه " " تيجي بعد التايم شيلتها
+      // Remove timezone suffixes like "EET".
       String cleanTime = time.split(' ')[0];
 
-
-
-      // convert the time to a DateTime object with a fake date
+      // Parse using a fixed date to safely adjust minutes.
       DateTime parsedTime = DateTime.parse("2026-01-01 $cleanTime");
 
-       // subtract 8 minutes from the fajr time because the api increase the time by 8 minutes
+      // Keep existing calibration for Fajr from API response.
       if (isFajr) {
         parsedTime = parsedTime.subtract(const Duration(minutes: 8));
       }
 
-
-    // convert the time to 12 hour format Not 24 hour format
-    
-      int hour = parsedTime.hour;
-      int minute = parsedTime.minute;
-
-      int displayHour = hour % 12;  // convert the time to 12 hour format Not 24 hour format
-      if (displayHour == 0) displayHour = 12;  
-
-      String minuteStr = minute.toString().padLeft(2, '0');  // add a zero to the minute if it is less than 10
- 
-      return "$displayHour:$minuteStr";
+      final hour = parsedTime.hour.toString().padLeft(2, '0');
+      final minute = parsedTime.minute.toString().padLeft(2, '0');
+      return "$hour:$minute";
     } catch (e) {
       return time.split(' ')[0];
     }

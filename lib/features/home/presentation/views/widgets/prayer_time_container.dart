@@ -153,7 +153,7 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
                   Row(
                     children: [
                       Container(
-                        padding: EdgeInsets.all(12),
+                        padding: EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: AppColors.primaryColor,
@@ -161,7 +161,7 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
                         child: Icon(
                           FontAwesomeIcons.clock.data,
                           color: Colors.white,
-                          size: 25,
+                          size: 22,
                         ),
                       ),
                       const Gap(10),
@@ -175,7 +175,7 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
                             ).copyWith(color: Color(0xff6B6B6B)),
                           ),
                           const Gap(5),
-                          Text(title, style: AppStyles.styleMedium24(context)),
+                          Text(title, style: AppStyles.styleMedium24(context).copyWith(fontSize: 22)),
                         ],
                       ),
                       Spacer(),
@@ -185,7 +185,7 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
                             time,
                             style: AppStyles.styleMedium30(
                               context,
-                            ).copyWith(color: AppColors.primaryColor),
+                            ).copyWith(color: AppColors.primaryColor,fontSize: 27),
                           ),
                           const Gap(5),
                           Row(
@@ -200,7 +200,7 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
                                   shape: BoxShape.circle,
                                 ),
                               ),
-                              Gap(5),
+                              Gap(3.5),
                               Text(
                                 remainingText,
                                 style: AppStyles.styleRegular12(
@@ -234,23 +234,16 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
           BlocBuilder<PrayerTimeCubit, PrayerTimeStates>(
             builder: (context, state) {
               if (state is SuccessPrayerTimeState) {
-                return SizedBox(
-                  height: 100,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    physics: BouncingScrollPhysics(),
-                    itemCount: state.prayerTimeItemModels.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: PrayerTimeItem(
-                          prayerTimeItemModel:
-                              state.prayerTimeItemModels[index],
-                        ),
-                      );
-                    },
-                  ),
-                );
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                 children: List.generate(state.prayerTimeItemModels.length, (index) {
+                  return PrayerTimeItem(
+                    prayerTimeItemModel:
+                        state.prayerTimeItemModels[index],
+                        );
+                 })
+                 );
+
               } else if (state is InitialPrayerTimeState) {
                 return const PrayerItemShimmer();
               } else if (state is FailurePrayerTimeState) {
