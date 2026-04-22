@@ -11,6 +11,7 @@ import 'package:athr/features/home/presentation/views/widgets/today_aya_containe
 import 'package:athr/features/quranKarim/presentation/views/quran_view.dart';
 import 'package:athr/features/reminder/presentation/manager/cubits/reminder_cubit.dart';
 import 'package:athr/features/reminder/presentation/views/reminder_view.dart';
+import 'package:athr/features/tasbeeh/presentation/views/tasbeeh_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -181,7 +182,7 @@ class _HomeViewState extends State<HomeView> {
                                   icon: FontAwesomeIcons.circle.data,
                                   color: AppColors.secondaryColor,
                                   buildNavigationScreen: () =>
-                                      const SizedBox.shrink(),
+                                      const TasbeehView(),
                                 ),
                               ),
                             ),
