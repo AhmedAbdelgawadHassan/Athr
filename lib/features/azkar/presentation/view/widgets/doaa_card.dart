@@ -1,3 +1,5 @@
+// ignore_for_file: strict_top_level_inference
+
 import 'package:athr/features/azkar/presentation/view/widgets/azkar_list_widget.dart';
 import 'package:athr/features/azkar/presentation/view/widgets/card_plus_header.dart';
 import 'package:athr/features/azkar/presentation/view/widgets/tool_button.dart';

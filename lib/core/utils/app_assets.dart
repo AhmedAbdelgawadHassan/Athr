@@ -27,7 +27,32 @@ abstract class AppAssets {
   static const String work = 'assets/images/work.jpg';
   static const String prayer  = 'assets/images/prayer.jpg';
   static const String sad = 'assets/images/sad.jpg';
-
-
+  static const String ahod = 'assets/images/ahod.jpg';
+  static const String badr = 'assets/images/badr.jpg';
+  static const String beforeIslam = 'assets/images/beforeIslam.jpg';
+  static const String efkEvent = 'assets/images/efkEvent.jpg';
+  static const String esraaAndMearag = 'assets/images/esraaAndMearag.jpg';
+  static const String eventsBeforeMakaaOpening = 'assets/images/eventsBeforeMakkaOpening.jpg';
+  static const String eventsBetweenBadr = 'assets/images/eventsBetweenBadr.jpg';
+  static const String firstOkba = 'assets/images/fistOkba.jpg'; 
+  static const String hanen = 'assets/images/hanen.png';
+  static const String hegraToMadenaEvents = 'assets/images/hegraToMadenaEvents.jpg';
+  static const String hejraToHabasha = 'assets/images/hejraToHabasha.jpg';
+  static const String hodaybeya = 'assets/images/hodaybeya.jpg';
+  static const String jehad = 'assets/images/Jehad.jpg';
+  static const String keybar = 'assets/images/keybar.jpg';
+  static const String khadeja = 'assets/images/khadeja.jpg';
+  static const String khandek = 'assets/images/khandek.jpg';
+  static const String makaaOpening = 'assets/images/makaaOpening.jpg';
+  static const String mohamedBorn = 'assets/images/mohamedBorn.jpg';
+  static const String mohamedDesc = 'assets/images/mohamedDesc.jpg';
+  static const String mohamedDied = 'assets/images/mohamedDied.png';
+  static const String muslimsCityBuilding = 'assets/images/muslimsCityBuilding.jpg';
+  static const String omarEbnElKhatab = 'assets/images/omarEbnElkhatab.jpg';
+  static const String sadYear = 'assets/images/sadYear.jpg';
+  static const String startDawaa = 'assets/images/startDawaa.jpg';
+  static const String tabok = 'assets/images/tabok.jpg';
+  static const String wahy = 'assets/images/wahy.jpg';
+  
   
 }

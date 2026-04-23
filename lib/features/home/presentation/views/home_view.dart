@@ -12,6 +12,7 @@ import 'package:athr/features/home/presentation/views/widgets/today_aya_containe
 import 'package:athr/features/quranKarim/presentation/views/quran_view.dart';
 import 'package:athr/features/reminder/presentation/manager/cubits/reminder_cubit.dart';
 import 'package:athr/features/reminder/presentation/views/reminder_view.dart';
+import 'package:athr/features/sera/presentation/views/sera_view.dart';
 import 'package:athr/features/tasbeeh/presentation/views/tasbeeh_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -148,12 +149,12 @@ class _HomeViewState extends State<HomeView> {
                             Expanded(
                               child: HomeItem(
                                 homeItemModel: HomeItemModel(
-                                  title: 'تعليم القرآن',
-                                  subtitle: 'دروس وتلاوات',
+                                  title: 'السيرة النبوية',
+                                  subtitle: 'للشيخ أحمد عامر',
                                   icon: FontAwesomeIcons.headphones.data,
                                   color: AppColors.primaryColor,
                                   buildNavigationScreen: () =>
-                                      const SizedBox.shrink(),
+                                      const SeraView()
                                 ),
                               ),
                             ),
