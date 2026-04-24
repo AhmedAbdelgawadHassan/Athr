@@ -9,6 +9,7 @@ import 'package:athr/features/home/presentation/manager/cubits/prayer_time_cubit
 import 'package:athr/features/home/presentation/views/widgets/home_item.dart';
 import 'package:athr/features/home/presentation/views/widgets/home_top_section.dart';
 import 'package:athr/features/home/presentation/views/widgets/today_aya_container.dart';
+import 'package:athr/features/qebla/presentation/views/qibla_view.dart';
 import 'package:athr/features/quranKarim/presentation/views/quran_view.dart';
 import 'package:athr/features/reminder/presentation/manager/cubits/reminder_cubit.dart';
 import 'package:athr/features/reminder/presentation/views/reminder_view.dart';
@@ -118,13 +119,12 @@ class _HomeViewState extends State<HomeView> {
                             Expanded(
                               child: HomeItem(
                                 homeItemModel: HomeItemModel(
-                                  title: 'الأدعية والأذكار',
-                                  subtitle: 'حصن المسلم',
-                                  icon: FontAwesomeIcons.hand.data,
-                                  color: AppColors.secondaryColor,
-                                  buildNavigationScreen: () =>
-                                      const AzkarView()
-                                ),
+                                    title: 'الأدعية والأذكار',
+                                    subtitle: 'حصن المسلم',
+                                    icon: FontAwesomeIcons.hand.data,
+                                    color: AppColors.secondaryColor,
+                                    buildNavigationScreen: () =>
+                                        const AzkarView()),
                               ),
                             ),
                             Gap(20),
@@ -149,13 +149,12 @@ class _HomeViewState extends State<HomeView> {
                             Expanded(
                               child: HomeItem(
                                 homeItemModel: HomeItemModel(
-                                  title: 'السيرة النبوية',
-                                  subtitle: 'للشيخ أحمد عامر',
-                                  icon: FontAwesomeIcons.headphones.data,
-                                  color: AppColors.primaryColor,
-                                  buildNavigationScreen: () =>
-                                      const SeraView()
-                                ),
+                                    title: 'السيرة النبوية',
+                                    subtitle: 'للشيخ أحمد عامر',
+                                    icon: FontAwesomeIcons.headphones.data,
+                                    color: AppColors.primaryColor,
+                                    buildNavigationScreen: () =>
+                                        const SeraView()),
                               ),
                             ),
                             Gap(20),
@@ -197,13 +196,13 @@ class _HomeViewState extends State<HomeView> {
                                   icon: FontAwesomeIcons.compass.data,
                                   color: AppColors.primaryColor,
                                   buildNavigationScreen: () =>
-                                      const SizedBox.shrink(),
+                                      const QiblaView(),
                                 ),
                               ),
                             ),
-                            Gap(20),
                           ],
-                        )
+                        ),
+                        Gap(20)
                       ],
                     )),
               ),

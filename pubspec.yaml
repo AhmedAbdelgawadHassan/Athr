@@ -20,6 +20,7 @@ dependencies:
   flutter_local_notifications: ^19.4.2
   flutter_localizations:
     sdk: flutter
+  flutter_qiblah: ^3.2.0
   flutter_timezone: ^4.1.1
   font_awesome_flutter: ^11.0.0
   gap: ^3.0.1
