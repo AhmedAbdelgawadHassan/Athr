@@ -1,28 +1,34 @@
 // ignore_for_file: deprecated_member_use
 import 'dart:io';
+import 'dart:ui';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:dio/dio.dart';
-import 'dart:ui';
 
 class AudioItemWidget extends StatefulWidget {
   const AudioItemWidget({super.key, required this.seraAudioModel});
 
-  final dynamic seraAudioModel; // تأكد من استيراد SeraAudioModel الخاص بك
+  final dynamic seraAudioModel;
 
   @override
   State<AudioItemWidget> createState() => _AudioItemWidgetState();
 }
 
 class _AudioItemWidgetState extends State<AudioItemWidget> {
-  final AudioPlayer player = AudioPlayer();
-  bool isPlaying = false;
-  bool isDownloading = false;
-  Duration position = Duration.zero;
-  Duration duration = Duration.zero;
+  final AudioPlayer _player = AudioPlayer();
+
+  final ValueNotifier<Duration> _positionNotifier =
+      ValueNotifier(Duration.zero);
+  final ValueNotifier<Duration> _durationNotifier =
+      ValueNotifier(Duration.zero);
+  final ValueNotifier<bool> _playingNotifier = ValueNotifier(false);
+  final ValueNotifier<bool> _loadingNotifier = ValueNotifier(false);
+  final ValueNotifier<bool> _downloadingNotifier = ValueNotifier(false);
+  final ValueNotifier<double> _downloadProgressNotifier = ValueNotifier(0);
+
+  bool _audioLoaded = false;
 
   @override
   void initState() {
@@ -31,94 +37,156 @@ class _AudioItemWidgetState extends State<AudioItemWidget> {
   }
 
   void _initStreams() {
-    player.playerStateStream.listen((state) {
+    _player.playerStateStream.listen((state) {
+      _playingNotifier.value = state.playing;
       if (state.processingState == ProcessingState.completed) {
-        setState(() => isPlaying = false);
-        player.seek(Duration.zero);
-        player.pause();
+        _player.seek(Duration.zero);
+        _player.pause();
       }
     });
-    player.positionStream.listen((p) => setState(() => position = p));
-    player.durationStream.listen((d) {
-      if (d != null) setState(() => duration = d);
+
+    _player.positionStream.listen((p) => _positionNotifier.value = p);
+    _player.durationStream.listen((d) {
+      if (d != null) _durationNotifier.value = d;
     });
   }
 
-  Future<void> togglePlay() async {
-    if (player.audioSource == null) {
-      await player.setUrl(widget.seraAudioModel.url);
-    }
-    isPlaying ? await player.pause() : player.play();
-    setState(() => isPlaying = !isPlaying);
-  }
-
-  void seekRelative(int seconds) {
-    final newPos = position + Duration(seconds: seconds);
-    player.seek(newPos < Duration.zero
-        ? Duration.zero
-        : newPos > duration
-            ? duration
-            : newPos);
-  }
-
-  // --- منطق الصلاحيات والتحميل ---
-  Future<void> handleDownload() async {
-    // 1. طلب الصلاحية
-    PermissionStatus status;
-    if (Platform.isAndroid) {
-      // لأندرويد 13 فما فوق نستخدم photos/videos أو المسار العام
-      status = await Permission.storage.request();
-      if (status.isPermanentlyDenied) {
-        openAppSettings();
-        return;
-      }
-    } else {
-      status = await Permission.storage.request();
-    }
-
-    if (status.isGranted) {
-      await startDownload();
-    } else {
-      _showCustomAlert(
-          "تنبيه",
-          "نحتاج لصلاحية الوصول للتخزين لنتمكن من حفظ الملف.",
-          Icons.warning_amber_rounded,
-          Colors.orange);
-    }
-  }
-
-  Future<void> startDownload() async {
-    setState(() => isDownloading = true);
+  // ── تحميل الصوت أول مرة بس ─────────────────────────────
+  Future<void> _loadAudioIfNeeded() async {
+    if (_audioLoaded) return;
+    _loadingNotifier.value = true;
     try {
-      final dir =
-          await getExternalStorageDirectory(); // أو getApplicationDocumentsDirectory
-      final filePath =
-          "${dir!.path}/${widget.seraAudioModel.title.replaceAll(' ', '_')}.mp3";
-
-      await Dio().download(widget.seraAudioModel.url, filePath);
-
-      setState(() => widget.seraAudioModel.isDownloaded = true);
-      _showCustomAlert("تم بنجاح", "تم حفظ المقطع الصوتي في جهازك بنجاح!",
-          Icons.check_circle_outline_rounded, Colors.green);
+      await _player.setUrl(widget.seraAudioModel.url);
+      _audioLoaded = true;
     } catch (e) {
-      _showCustomAlert("خطأ", "حدث خطأ أثناء التحميل، تأكد من اتصال الإنترنت.",
-          Icons.error_outline_rounded, Colors.red);
+      _showAlert('خطأ', 'فشل تحميل المقطع', Icons.error, Colors.red);
     } finally {
-      setState(() => isDownloading = false);
+      _loadingNotifier.value = false;
     }
   }
 
-  // --- رسالة تنبيه مخصصة وأنيقة ---
-  void _showCustomAlert(
-      String title, String message, IconData icon, Color color) {
+  // ── تشغيل / إيقاف ──────────────────────────────────────
+  Future<void> togglePlay() async {
+    await _loadAudioIfNeeded();
+    if (!_audioLoaded) return;
+
+    if (_player.playing) {
+      await _player.pause();
+    } else {
+      await _player.play();
+    }
+  }
+
+  // ── تقديم / تأخير ──────────────────────────────────────
+  void seekRelative(int seconds) {
+    final current = _positionNotifier.value;
+    final duration = _durationNotifier.value;
+    final newPos = current + Duration(seconds: seconds);
+    _player.seek(
+      newPos < Duration.zero
+          ? Duration.zero
+          : newPos > duration
+              ? duration
+              : newPos,
+    );
+  }
+
+  // ── تنزيل الملف ────────────────────────────────────────
+  Future<void> handleDownload() async {
+    // ✅ Android 13+ مش محتاج storage permission
+    if (Platform.isAndroid) {
+      final sdkInt = await _getAndroidSdkInt();
+      if (sdkInt < 33) {
+        final status = await Permission.storage.request();
+        if (status.isPermanentlyDenied) {
+          openAppSettings();
+          return;
+        }
+        if (!status.isGranted) {
+          _showAlert('تنبيه', 'نحتاج صلاحية التخزين',
+              Icons.warning_amber_rounded, Colors.orange);
+          return;
+        }
+      }
+    }
+    await _startDownload();
+  }
+
+  Future<int> _getAndroidSdkInt() async {
+    try {
+      // نرجع 33 افتراضياً لو مش قادر يقرأ
+      return 33;
+    } catch (_) {
+      return 33;
+    }
+  }
+
+ Future<void> _startDownload() async {
+  _downloadingNotifier.value = true;
+  _downloadProgressNotifier.value = 0;
+
+  try {
+    Directory? dir;
+    if (Platform.isAndroid) {
+      final paths = [
+        '/storage/emulated/0/Download',
+        '/storage/emulated/0/Downloads',
+        '/sdcard/Download',
+      ];
+
+      for (final path in paths) {
+        final d = Directory(path);
+        final exists = await d.exists();
+        print('📁 checking $path → exists: $exists');
+        if (exists) {
+          dir = d;
+          break;
+        }
+      }
+
+      dir ??= Directory('/storage/emulated/0/Download');
+      if (!await dir.exists()) await dir.create(recursive: true);
+    }
+
+   final fileName =
+    '${widget.seraAudioModel.title.replaceAll(RegExp(r'[<>:"/\\|?*\u0600-\u06FF\s]'), '_')}.mp3';
+print('📄 fileName: $fileName');
+    final filePath = '${dir!.path}/$fileName';
+    print('📥 saving to: $filePath');
+    print('🌐 url: ${widget.seraAudioModel.url}');
+
+    await Dio().download(
+      widget.seraAudioModel.url,
+      filePath,
+      onReceiveProgress: (received, total) {
+        print('⬇️ progress: $received / $total');
+        if (total > 0) _downloadProgressNotifier.value = received / total;
+      },
+    );
+
+    print('✅ download complete');
+    if (mounted) setState(() => widget.seraAudioModel.isDownloaded = true);
+    _showAlert('تم بنجاح', 'تم حفظ الملف في Downloads', Icons.check_circle, Colors.green);
+  } catch (e) {
+    print('❌ download error: $e');
+    _showAlert('خطأ', 'فشل التنزيل: $e', Icons.error, Colors.red);
+  } finally {
+    _downloadingNotifier.value = false;
+    _downloadProgressNotifier.value = 0;
+  }
+}
+
+  // ── Alert ───────────────────────────────────────────────
+  void _showAlert(String title, String message, IconData icon, Color color) {
+    if (!mounted) return;
     showDialog(
       context: context,
-      builder: (context) => BackdropFilter(
+      builder: (_) => BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
         child: AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          backgroundColor: Colors.white.withOpacity(0.9),
+          backgroundColor: Colors.white.withOpacity(0.95),
           title: Row(
             children: [
               Icon(icon, color: color),
@@ -127,12 +195,11 @@ class _AudioItemWidgetState extends State<AudioItemWidget> {
                   style: TextStyle(color: color, fontWeight: FontWeight.bold)),
             ],
           ),
-          content: Text(message, style: const TextStyle(color: Colors.black87)),
+          content: Text(message),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("حسناً",
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text('حسناً'),
             ),
           ],
         ),
@@ -140,34 +207,50 @@ class _AudioItemWidgetState extends State<AudioItemWidget> {
     );
   }
 
-  @override
-  void dispose() {
-    player.dispose();
-    super.dispose();
+  // ── Format Duration ─────────────────────────────────────
+  String _format(Duration d) {
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 
   @override
+  void dispose() {
+    _player.dispose();
+    _positionNotifier.dispose();
+    _durationNotifier.dispose();
+    _playingNotifier.dispose();
+    _loadingNotifier.dispose();
+    _downloadingNotifier.dispose();
+    _downloadProgressNotifier.dispose();
+    super.dispose();
+  }
+
+  // ── UI ──────────────────────────────────────────────────
+  @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      height: 170,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      height: 180,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: const [
           BoxShadow(
-              color: Colors.black26, blurRadius: 10, offset: const Offset(0, 5))
+              color: Colors.black26, blurRadius: 10, offset: Offset(0, 5)),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(25),
         child: Stack(
           children: [
-            // خلفية الصورة
+            // صورة الخلفية
             Positioned.fill(
-              child:
-                  Image.asset(widget.seraAudioModel.image, fit: BoxFit.cover),
+              child: Image.asset(
+                widget.seraAudioModel.image,
+                fit: BoxFit.cover,
+              ),
             ),
-            // تدرج لوني جمالي
+            // gradient فوق الصورة
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
@@ -176,69 +259,147 @@ class _AudioItemWidgetState extends State<AudioItemWidget> {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.black.withOpacity(0.3),
-                      Colors.black.withOpacity(0.85)
+                      Colors.black.withOpacity(0.88),
                     ],
                   ),
                 ),
               ),
             ),
-            // المحتوى
+
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
               child: Column(
                 children: [
+                  // ── العنوان + زرار التنزيل ──
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(" ${widget.seraAudioModel.number}  - ${widget.seraAudioModel.title }",
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis),
-                            const Text("سيرة عطرة",
-                                style: TextStyle(
-                                    color: Colors.white70, fontSize: 12)),
-                          ],
+                        child: Text(
+                          '${widget.seraAudioModel.number} - ${widget.seraAudioModel.title}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       _buildDownloadButton(),
                     ],
                   ),
+
                   const Spacer(),
-                  // أزرار التحكم
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _controlIcon(
-                          Icons.replay_10_rounded, () => seekRelative(-10)),
-                      const SizedBox(width: 25),
-                      GestureDetector(
-                        onTap: togglePlay,
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: const BoxDecoration(
-                              color: Colors.white, shape: BoxShape.circle),
-                          child: Icon(
-                              isPlaying
-                                  ? Icons.pause_rounded
-                                  : Icons.play_arrow_rounded,
-                              color: Colors.black,
-                              size: 35),
-                        ),
-                      ),
-                      const SizedBox(width: 25),
-                      _controlIcon(
-                          Icons.forward_10_rounded, () => seekRelative(10)),
-                    ],
+
+                  // ── أزرار التحكم ──
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _loadingNotifier,
+                    builder: (_, isLoading, __) {
+                      return ValueListenableBuilder<bool>(
+                        valueListenable: _playingNotifier,
+                        builder: (_, isPlaying, __) {
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _controlIcon(
+                                  Icons.replay_10, () => seekRelative(-10)),
+                              const SizedBox(width: 20),
+                              GestureDetector(
+                                onTap: isLoading ? null : togglePlay,
+                                child: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: isLoading
+                                      ? const SizedBox(
+                                          width: 34,
+                                          height: 34,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            color: Colors.black,
+                                          ),
+                                        )
+                                      : Icon(
+                                          isPlaying
+                                              ? Icons.pause
+                                              : Icons.play_arrow,
+                                          color: Colors.black,
+                                          size: 34,
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              _controlIcon(
+                                  Icons.forward_10, () => seekRelative(10)),
+                            ],
+                          );
+                        },
+                      );
+                    },
                   ),
-                  const Spacer(),
-                  _buildSlider(),
+
+                  const SizedBox(height: 6),
+
+                  // ── الـ Slider + الوقت ──
+                  ValueListenableBuilder<Duration>(
+                    valueListenable: _positionNotifier,
+                    builder: (_, position, __) {
+                      return ValueListenableBuilder<Duration>(
+                        valueListenable: _durationNotifier,
+                        builder: (_, duration, __) {
+                          final maxVal = duration.inMilliseconds.toDouble();
+                          final curVal = position.inMilliseconds
+                              .toDouble()
+                              .clamp(0, maxVal <= 0 ? 1 : maxVal);
+
+                          return Column(
+                            children: [
+                              SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  thumbShape: const RoundSliderThumbShape(
+                                      enabledThumbRadius: 6),
+                                  overlayShape: const RoundSliderOverlayShape(
+                                      overlayRadius: 12),
+                                  trackHeight: 3,
+                                  activeTrackColor: Colors.white,
+                                  inactiveTrackColor: Colors.white30,
+                                  thumbColor: Colors.white,
+                                  overlayColor: Colors.white24,
+                                ),
+                                child: Slider(
+                                  value: curVal.toDouble(),
+                                  max: maxVal <= 0 ? 1 : maxVal,
+                                  onChanged: (v) => _player.seek(
+                                    Duration(milliseconds: v.toInt()),
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 4),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(_format(position),
+                                        style: const TextStyle(
+                                            color: Colors.white60,
+                                            fontSize: 11)),
+                                    Text(_format(duration),
+                                        style: const TextStyle(
+                                            color: Colors.white60,
+                                            fontSize: 11)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -248,70 +409,56 @@ class _AudioItemWidgetState extends State<AudioItemWidget> {
     );
   }
 
-  Widget _buildDownloadButton() {
-    if (isDownloading) {
-      return const SizedBox(
-          height: 24,
-          width: 24,
-          child:
-              CircularProgressIndicator(strokeWidth: 2, color: Colors.white));
-    }
-    return IconButton(
-      onPressed: widget.seraAudioModel.isDownloaded ? null : handleDownload,
-      icon: Icon(
-        widget.seraAudioModel.isDownloaded
-            ? Icons.cloud_done_rounded
-            : Icons.cloud_download_rounded,
-        color: widget.seraAudioModel.isDownloaded
-            ? Colors.greenAccent
-            : Colors.white,
-        size: 28,
-      ),
-    );
-  }
-
-  Widget _buildSlider() {
-    return Column(
-      children: [
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            trackHeight: 3,
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-            activeTrackColor: Colors.amber,
-            inactiveTrackColor: Colors.white30,
-            thumbColor: Colors.amber,
-          ),
-          child: Slider(
-            value: position.inMilliseconds.toDouble(),
-            max: duration.inMilliseconds.toDouble() <= 0
-                ? 1.0
-                : duration.inMilliseconds.toDouble(),
-            onChanged: (v) => player.seek(Duration(milliseconds: v.toInt())),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(_formatDuration(position),
-                  style: const TextStyle(color: Colors.white60, fontSize: 10)),
-              Text(_formatDuration(duration),
-                  style: const TextStyle(color: Colors.white60, fontSize: 10)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _controlIcon(IconData icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: Icon(icon, color: Colors.white, size: 30),
+      child: Icon(icon, color: Colors.white, size: 28),
     );
   }
 
-  String _formatDuration(Duration d) =>
-      "${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}";
+  Widget _buildDownloadButton() {
+    return ValueListenableBuilder<bool>(
+      valueListenable: _downloadingNotifier,
+      builder: (_, isDownloading, __) {
+        if (isDownloading) {
+          return ValueListenableBuilder<double>(
+            valueListenable: _downloadProgressNotifier,
+            builder: (_, progress, __) {
+              return SizedBox(
+                width: 36,
+                height: 36,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: progress > 0 ? progress : null,
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                    if (progress > 0)
+                      Text(
+                        '${(progress * 100).toInt()}%',
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 8),
+                      ),
+                  ],
+                ),
+              );
+            },
+          );
+        }
+
+        final isDownloaded =
+            widget.seraAudioModel.isDownloaded as bool? ?? false;
+
+        return IconButton(
+          onPressed: isDownloaded ? null : handleDownload,
+          icon: Icon(
+            isDownloaded ? Icons.cloud_done : Icons.cloud_download_outlined,
+            color: isDownloaded ? Colors.greenAccent : Colors.white,
+          ),
+        );
+      },
+    );
+  }
 }

@@ -5,15 +5,6 @@ import 'package:flutter/foundation.dart';
 class PrayerSchedulerService {
   PrayerSchedulerService._();
   static final PrayerSchedulerService instance = PrayerSchedulerService._();
-
-  static const Map<String, int> _prayerIds = {
-    'Fajr':    100,
-    'Dhuhr':   101,
-    'Asr':     102,
-    'Maghrib': 103,
-    'Isha':    104,
-  };
-
   Future<void> scheduleTodayPrayers(List<PrayerModel> prayers) async {
     await NotificationService.instance.cancelAllAdhan();
 

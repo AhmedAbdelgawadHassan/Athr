@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:athr/core/utils/app_colors.dart';
 import 'package:athr/core/utils/app_styles.dart';
 import 'package:flutter/material.dart';
@@ -10,32 +12,57 @@ class AddReminderButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 25),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            // ignore: deprecated_member_use
-            side: BorderSide(color: AppColors.secondaryColor.withOpacity(0.4), width: 1.5),
-          )
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            FaIcon(
-              FontAwesomeIcons.plus,
-              color: Color(0xff6B6B6B),
-              size: 20,
-            ),
-            Gap(15),
-            Text(
-              'إضافة تذكير جديد',
-              style: AppStyles.styleRegular16(context)
-                  .copyWith(color: Color(0xff6B6B6B)),
-            )
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primaryColor,
+            AppColors.primaryColor.withOpacity(0.75),
           ],
-        ));
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryColor.withOpacity(0.25),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 18,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const FaIcon(
+                  FontAwesomeIcons.circlePlus,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const Gap(10),
+                Text(
+                  'إضافة تذكير جديد',
+                  style: AppStyles.styleMedium16(context).copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

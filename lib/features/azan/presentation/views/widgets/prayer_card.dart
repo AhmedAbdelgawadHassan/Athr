@@ -35,6 +35,24 @@ class _NormalPrayerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String formatTo12Hour(String time) {
+  final parts = time.split(':');
+  int hour = int.parse(parts[0]);
+  final minute = parts[1];
+
+  String period = "AM";
+
+  if (hour >= 12) {
+    period = "PM";
+    if (hour > 12) hour -= 12;
+  }
+
+  if (hour == 0) {
+    hour = 12;
+  }
+
+  return "$hour:$minute $period";
+}
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -56,7 +74,7 @@ class _NormalPrayerCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                prayer.time,
+                formatTo12Hour(prayer.time),
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,

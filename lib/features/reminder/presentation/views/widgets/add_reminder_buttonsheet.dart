@@ -13,136 +13,115 @@ import 'package:gap/gap.dart';
 
 void addReminderButtonSheet(BuildContext context) {
   final cubit = context.read<ReminderCubit>();
-
-  final TextEditingController titleController = TextEditingController();
-
-  int selectedIcon = Icons.star.codePoint;
-  Color selectedColor = Colors.green;
-  TimeOfDay selectedTime = TimeOfDay.now();
-  bool isDaily = false;
-
   showModalBottomSheet(
     context: context,
     backgroundColor: const Color(0xffF5F4F1),
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(16),
-      ),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
-    builder: (_) {
-      return BlocProvider.value(
-        value: cubit,
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: 16,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.close),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  "إضافة تذكير جديد",
-                  style: AppStyles.styleSemiBold24(context),
-                ),
-                const Gap(20),
-                ReminderTextfield(
-                  titleController: titleController,
-                ),
-                const Gap(20),
-                TimeReminderButton(
-                  onTimeSelected: (time) {
-                    selectedTime = time;
-                  },
-                ),
-                const Gap(20),
-                IconSelcetionSection(
-                  onIconSelected: (icon) {
-                    selectedIcon = icon;
-                  },
-                ),
-                const Gap(20),
-                ColorSelectorSection(
-                  onColorSelected: (color) {
-                    selectedColor = color;
-                  },
-                ),
-                const Gap(20),
-                DailyRepeatButton(
-                  onRepeatChanged: (value) {
-                    isDaily = value;
-                  },
-                ),
-                const Gap(30),
-                SaveReminderButton(
-                  onPressed: () async {
-                    if (titleController.text.trim().isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('من فضلك أدخل عنوان التذكير'),
-                        ),
-                      );
-                      return;
-                    }
-
-                    final now = DateTime.now();
-
-                    final reminderTime = DateTime(
-                      now.year,
-                      now.month,
-                      now.day,
-                      selectedTime.hour,
-                      selectedTime.minute,
-                    );
-
-                    await cubit.addReminder(
-                      ReminderModel(
-                        id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        title: titleController.text.trim(),
-                        time: reminderTime,
-                        color: selectedColor.toARGB32(),
-                        icon: selectedIcon,
-                        isDaily: isDaily,
-                      ),
-                    );
-
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                    }
-                  },
-                ),
-                const Gap(20),
-              ],
-            ),
-          ),
-        ),
-      );
-    },
+    builder: (_) => BlocProvider.value(
+      value: cubit,
+      child: const _AddReminderSheet(),
+    ),
   );
 }
 
+class _AddReminderSheet extends StatefulWidget {
+  const _AddReminderSheet();
 
+  @override
+  State<_AddReminderSheet> createState() => _AddReminderSheetState();
+}
 
+class _AddReminderSheetState extends State<_AddReminderSheet> {
+  final TextEditingController _titleController = TextEditingController();
 
+  // ✅ null عشان نعرف لو المستخدم اختار ولا لأ
+  int? _selectedIcon;
+  Color _selectedColor = Colors.green;
+  TimeOfDay _selectedTime = TimeOfDay.now();
+  bool _isDaily = false;
 
+  @override
+  void dispose() {
+    _titleController.dispose();
+    super.dispose();
+  }
 
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.close),
+            ),
+            const SizedBox(height: 16),
+            Text("إضافة تذكير جديد", style: AppStyles.styleSemiBold24(context)),
+            const Gap(20),
+            ReminderTextfield(titleController: _titleController),
+            const Gap(20),
+            TimeReminderButton(
+              onTimeSelected: (time) => setState(() => _selectedTime = time),
+            ),
+            const Gap(20),
+            IconSelcetionSection(
+              onIconSelected: (icon) => setState(() => _selectedIcon = icon),
+            ),
+            const Gap(20),
+            ColorSelectorSection(
+              onColorSelected: (color) => setState(() => _selectedColor = color),
+            ),
+            const Gap(20),
+            DailyRepeatButton(
+              onRepeatChanged: (value) => setState(() => _isDaily = value),
+            ),
+            const Gap(30),
+            SaveReminderButton(
+              onPressed: () async {
+                if (_titleController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('من فضلك أدخل عنوان التذكير')),
+                  );
+                  return;
+                }
 
+                final now = DateTime.now();
+                final reminderTime = DateTime(
+                  now.year, now.month, now.day,
+                  _selectedTime.hour, _selectedTime.minute,
+                );
 
+                await context.read<ReminderCubit>().addReminder(
+                  ReminderModel(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    title: _titleController.text.trim(),
+                    time: reminderTime,
+                    color: _selectedColor.toARGB32(),
+                    // ✅ لو مختارش أيقونة يبقى النجمة default
+                    icon: _selectedIcon ?? Icons.star.codePoint,
+                    isDaily: _isDaily,
+                  ),
+                );
 
-
-
-
-
-
- 
+                if (context.mounted) Navigator.pop(context);
+              },
+            ),
+            const Gap(20),
+          ],
+        ),
+      ),
+    );
+  }
+}

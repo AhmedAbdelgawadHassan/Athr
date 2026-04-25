@@ -16,8 +16,7 @@ class PrayerTimeItemModel {
   });
 
   /// 🔹 تحويل من API → List<PrayerTimeItemModel>
-  static List<PrayerTimeItemModel> fromApi(Map<String, dynamic> json) {
-    // this function is used to convert the API response to a list of PrayerTimeItemModel
+  static List<PrayerTimeItemModel> fromApi(Map<String, dynamic> json) {   // this function is used to convert the API response to a list of PrayerTimeItemModel
     final timings = json['data']['timings'];
 
     return [
@@ -41,7 +40,7 @@ class PrayerTimeItemModel {
       ),
       PrayerTimeItemModel(
         name: "المغرب",
-        time: '20:12',
+        time:_formatTime(timings['Maghrib']),
         icon: AppAssets.magreb,
         color: const Color(0xFFF3D6D6),
       ),

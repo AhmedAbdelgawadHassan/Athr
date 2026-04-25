@@ -87,6 +87,7 @@ class _ReminderViewState extends State<ReminderView> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
+                        Gap(12),
                         AddReminderButton(
                           onPressed: () => addReminderButtonSheet(context),
                         ),

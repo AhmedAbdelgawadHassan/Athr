@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:athr/core/services/notification_service.dart';
 import 'package:athr/core/services/prayer_scheduler_service.dart';
 import 'package:athr/features/azan/data/models/prayer_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
