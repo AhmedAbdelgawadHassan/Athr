@@ -16,11 +16,11 @@ import 'package:hive_flutter/hive_flutter.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Prefs.init(); // initialize shared Preference
-  await Hive.initFlutter(); // initialize Hive
-
-  await Hive.openBox('reminders'); // open reminders box
-  await NotificationService.instance.init();
+  await Prefs.init();
+  await Hive.initFlutter();
+  await Hive.openBox('reminders');
+  await NotificationService.instance.init(); // ✅ بس ده كفاية
+  
 
   runApp(const AthrApp());
 }
@@ -32,10 +32,9 @@ class AthrApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => LocaleCubit()), // cubit for Language
+        BlocProvider(create: (_) => LocaleCubit()),
         BlocProvider(
           create: (_) => PrayerTimeCubit(
-            // cubit for Prayers Time
             InitialPrayerTimeState(),
             prayerTimeRepo: PrayerTimeRepoImpl(
               prayerTimeService: PrayerTimeService(dio: Dio()),

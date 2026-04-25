@@ -10,7 +10,7 @@ class AdviceContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Color(0xffEDDEBA),
         borderRadius: BorderRadius.circular(16),

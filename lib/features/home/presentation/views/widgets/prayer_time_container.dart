@@ -115,7 +115,7 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -175,7 +175,7 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
                             ).copyWith(color: Color(0xff6B6B6B)),
                           ),
                           const Gap(5),
-                          Text(title, style: AppStyles.styleMedium24(context).copyWith(fontSize: 22)),
+                          Text(title, style: AppStyles.styleMedium24(context)),
                         ],
                       ),
                       Spacer(),

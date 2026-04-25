@@ -8,9 +8,6 @@ class ReminderCubit extends Cubit<List<ReminderModel>> {
 
   final Box reminderBox = Hive.box('reminders');
 
-
-
- //// load all reminders from box
   Future<void> loadReminders() async {
     final List<ReminderModel> reminders = [];
     final List<dynamic> invalidKeys = [];
@@ -18,55 +15,45 @@ class ReminderCubit extends Cubit<List<ReminderModel>> {
     for (final dynamic key in reminderBox.keys) {
       final dynamic item = reminderBox.get(key);
       try {
-        if (item is ReminderModel) {
-          reminders.add(item);
-          continue;
-        }
-        if (item is Map) {
-          reminders.add(ReminderModel.fromMap(item));
-          continue;
-        }
+        if (item is ReminderModel) { reminders.add(item); continue; }
+        if (item is Map) { reminders.add(ReminderModel.fromMap(item)); continue; }
         invalidKeys.add(key);
-      } catch (_) {
-        invalidKeys.add(key);
-      }
+      } catch (_) { invalidKeys.add(key); }
     }
 
-    // Remove corrupted/unknown records to avoid repeated runtime crashes.
-    if (invalidKeys.isNotEmpty) {
-      reminderBox.deleteAll(invalidKeys);
-    }
-
+    if (invalidKeys.isNotEmpty) reminderBox.deleteAll(invalidKeys);
     emit(reminders);
 
     for (final reminder in reminders) {
-      await NotificationService.instance.scheduleReminderNotification(reminder);
+      await NotificationService.instance.scheduleReminder(
+        id: reminder.id,
+        title: reminder.title,
+        time: reminder.time,
+        isDaily: reminder.isDaily,
+      );
     }
   }
 
-
-
- //// add a new reminder to box
   Future<void> addReminder(ReminderModel reminder) async {
     try {
       reminderBox.put(reminder.id, reminder.toMap());
-    } catch (_) {
-      return;
-    }
-    await NotificationService.instance.scheduleReminderNotification(reminder);
+    } catch (_) { return; }
+
+    await NotificationService.instance.scheduleReminder(
+      id: reminder.id,
+      title: reminder.title,
+      time: reminder.time,
+      isDaily: reminder.isDaily,
+    );
     await loadReminders();
   }
 
-
-
-  //// delete a reminder from box
   Future<void> deleteReminder(String id) async {
     try {
       reminderBox.delete(id);
-    } catch (_) {
-      return;
-    }
-    await NotificationService.instance.cancelReminderNotification(id);
+    } catch (_) { return; }
+
+    await NotificationService.instance.cancelReminder(id); // ✅
     await loadReminders();
   }
 }

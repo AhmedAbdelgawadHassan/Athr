@@ -1,10 +1,7 @@
-import 'package:athr/features/reminder/data/models/reminder_model.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter/foundation.dart';
 import 'dart:io';
-import 'package:intl/intl.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -12,145 +9,196 @@ class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
 
-  final FlutterLocalNotificationsPlugin _plugin =
-      FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
   bool _isInitialized = false;
 
+  static const Map<String, int> prayerIds = {
+    'Fajr':    100,
+    'Dhuhr':   101,
+    'Asr':     102,
+    'Maghrib': 103,
+    'Isha':    104,
+  };
+
   Future<void> init() async {
-    if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
-      return;
-    }
+    if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) return;
 
     tz.initializeTimeZones();
     try {
       final timezoneName = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(timezoneName));
-    } catch (_) {}
-
-    const androidInit = AndroidInitializationSettings('@mipmap/launcher_icon');
-    const iosInit = DarwinInitializationSettings();
-    const initSettings =
-        InitializationSettings(android: androidInit, iOS: iosInit);
-
-    try {
-      await _plugin.initialize(initSettings);
-      _isInitialized = true;
     } catch (e) {
-      debugPrint('Notification initialize error: $e');
-      _isInitialized = false;
+      tz.setLocalLocation(tz.getLocation('UTC'));
     }
 
-    if (!_isInitialized) return;
+    const settings = InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      iOS: DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+      ),
+    );
 
+    await _plugin.initialize(settings);
+    _isInitialized = true;
+    await _requestPermissions();
+    await _createChannels();
+  }
+
+  Future<void> _requestPermissions() async {
     try {
       if (Platform.isAndroid) {
-        await _plugin
-            .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin>()
-            ?.requestNotificationsPermission();
+        final android = _plugin.resolvePlatformSpecificImplementation
+            <AndroidFlutterLocalNotificationsPlugin>();
+        await android?.requestNotificationsPermission();
+        await android?.requestExactAlarmsPermission();
       } else if (Platform.isIOS) {
-        await _plugin
-            .resolvePlatformSpecificImplementation<
-                IOSFlutterLocalNotificationsPlugin>()
-            ?.requestPermissions(alert: true, badge: true, sound: true);
+        final ios = _plugin.resolvePlatformSpecificImplementation
+            <IOSFlutterLocalNotificationsPlugin>();
+        await ios?.requestPermissions(alert: true, badge: true, sound: true);
       }
-    } on MissingPluginException catch (e) {
-      debugPrint('Notification permission plugin missing: $e');
     } catch (e) {
-      debugPrint('Notification permission error: $e');
+      debugPrint('Permission error: $e');
     }
   }
 
-  Future<void> scheduleReminderNotification(ReminderModel reminder) async {
+  Future<void> _createChannels() async {
+    final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
+        _plugin.resolvePlatformSpecificImplementation
+          <  AndroidFlutterLocalNotificationsPlugin>();
+
+    if (androidPlugin == null) return;
+
+    const adhanChannel = AndroidNotificationChannel(
+      'adhan_channel',
+      'Prayer Adhan',
+      description: 'Adhan notifications for prayer times',
+      importance: Importance.max,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    const reminderChannel = AndroidNotificationChannel(
+      'reminder_channel',
+      'Reminder Notifications',
+      description: 'User reminders',
+      importance: Importance.max,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    await androidPlugin.createNotificationChannel(adhanChannel);
+    await androidPlugin.createNotificationChannel(reminderChannel);
+  }
+
+  // ───── الأذان ─────
+  Future<void> scheduleAdhan({
+    required String prayerName,
+    required String prayerNameEn,
+    required DateTime prayerTime,
+  }) async {
     if (!_isInitialized) return;
-    final id = _notificationId(reminder.id);
-    final title = reminder.title;
-    final body = 'وقت التذكير: ${DateFormat('hh:mm a').format(reminder.time)}';
+
+    if (!prayerTime.isAfter(DateTime.now())) {
+      debugPrint('⏩ Skipping $prayerNameEn - time already passed');
+      return;
+    }
+
+    final id = prayerIds[prayerNameEn] ??
+        prayerNameEn.hashCode.abs() % 900 + 100;
+
+    const androidDetails = AndroidNotificationDetails(
+      'adhan_channel',
+      'Prayer Adhan',
+      importance: Importance.max,
+      priority: Priority.max,
+      playSound: true,
+      enableVibration: true,
+      fullScreenIntent: true,
+    );
+
+    await _plugin.zonedSchedule(
+      id,
+      '🕌 حان وقت $prayerName',
+      'الله أكبر الله أكبر',
+      tz.TZDateTime.from(prayerTime, tz.local),
+      const NotificationDetails(
+        android: androidDetails,
+        iOS: DarwinNotificationDetails(
+          interruptionLevel: InterruptionLevel.timeSensitive,
+        ),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+    );
+
+    debugPrint('✅ Scheduled adhan: $prayerNameEn at $prayerTime');
+  }
+
+  Future<void> cancelAdhan(String prayerNameEn) async {
+    final id = prayerIds[prayerNameEn] ??
+        prayerNameEn.hashCode.abs() % 900 + 100;
+    await _plugin.cancel(id);
+    debugPrint('🗑️ Cancelled adhan: $prayerNameEn');
+  }
+
+  Future<void> cancelAllAdhan() async {
+    for (final id in prayerIds.values) {
+      await _plugin.cancel(id);
+    }
+    debugPrint('🗑️ Cancelled all adhan notifications');
+  }
+
+  // ───── Reminder ─────
+  Future<void> scheduleReminder({
+    required String id,
+    required String title,
+    required DateTime time,
+    required bool isDaily,
+  }) async {
+    if (!_isInitialized) return;
+
+    final notifId = id.hashCode.abs();
 
     const androidDetails = AndroidNotificationDetails(
       'reminder_channel',
-      'Reminder Notifications',
-      channelDescription: 'Notifications for user reminders',
-      importance: Importance.high,
-      priority: Priority.high,
-      playSound: true,
-    );
-    const iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-    const notificationDetails = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
+      'Reminders',
+      importance: Importance.max,
+      priority: Priority.max,
     );
 
-    final scheduledDate = _nextValidDate(reminder.time, reminder.isDaily);
-    try {
-      await _plugin.zonedSchedule(
-        id,
-        title,
-        body,
-        tz.TZDateTime.from(scheduledDate, tz.local),
-        notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        matchDateTimeComponents:
-            reminder.isDaily ? DateTimeComponents.time : null,
-      );
-    } on MissingPluginException catch (e) {
-      debugPrint('Schedule plugin missing: $e');
-      return;
-    } catch (e) {
-      // Some Android devices reject exact alarms without extra permission.
-      try {
-        await _plugin.zonedSchedule(
-          id,
-          title,
-          body,
-          tz.TZDateTime.from(scheduledDate, tz.local),
-          notificationDetails,
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          matchDateTimeComponents:
-              reminder.isDaily ? DateTimeComponents.time : null,
-        );
-        debugPrint('Exact schedule fallback used: $e');
-      } on MissingPluginException catch (fallbackError) {
-        debugPrint('Schedule fallback plugin missing: $fallbackError');
-      }
-    }
+    final nextTime = _nextValidDate(time, isDaily);
+
+    await _plugin.zonedSchedule(
+      notifId,
+      title,
+      'تذكير',
+      tz.TZDateTime.from(nextTime, tz.local),
+      const NotificationDetails(
+        android: androidDetails,
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      matchDateTimeComponents: isDaily ? DateTimeComponents.time : null,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+    );
   }
 
-  Future<void> cancelReminderNotification(String reminderId) async {
-    if (!_isInitialized) return;
-    try {
-      await _plugin.cancel(_notificationId(reminderId));
-    } on MissingPluginException catch (e) {
-      debugPrint('Cancel plugin missing: $e');
-    }
-  }
-
-  int _notificationId(String reminderId) {
-    return reminderId.hashCode.abs();
+  Future<void> cancelReminder(String id) async {
+    await _plugin.cancel(id.hashCode.abs());
   }
 
   DateTime _nextValidDate(DateTime date, bool isDaily) {
     final now = DateTime.now();
     if (isDaily) {
       DateTime next = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        date.hour,
-        date.minute,
-      );
-      if (!next.isAfter(now)) {
-        next = next.add(const Duration(days: 1));
-      }
+          now.year, now.month, now.day, date.hour, date.minute);
+      if (!next.isAfter(now)) next = next.add(const Duration(days: 1));
       return next;
     }
-    if (!date.isAfter(now)) {
-      return now.add(const Duration(seconds: 5));
-    }
-    return date;
+    return date.isAfter(now) ? date : now.add(const Duration(seconds: 5));
   }
 }

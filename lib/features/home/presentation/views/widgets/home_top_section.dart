@@ -10,7 +10,7 @@ class HomeTopSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return  Container(
-              padding: EdgeInsets.symmetric(vertical: 20,horizontal: 16),
+              padding: EdgeInsets.symmetric(vertical: 20,horizontal: 12),
               decoration: BoxDecoration(
                 color: AppColors.primaryColor,
                 borderRadius: BorderRadius.only(bottomLeft: Radius.circular(50),bottomRight: Radius.circular(50)),

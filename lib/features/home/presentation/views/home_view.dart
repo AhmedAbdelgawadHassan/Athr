@@ -1,6 +1,8 @@
 // ignore_for_file: prefer_typing_uninitialized_variables
 import 'package:athr/core/services/location_service.dart';
 import 'package:athr/core/utils/app_colors.dart';
+import 'package:athr/features/azan/presentation/manager/cubits/adhan_cubit.dart';
+import 'package:athr/features/azan/presentation/views/azan_view.dart';
 import 'package:athr/features/azkar/presentation/view/azkar_view.dart';
 import 'package:athr/features/home/data/models/home_item_model.dart';
 import 'package:athr/features/home/data/repos/aya_repo_impl.dart';
@@ -107,7 +109,11 @@ class _HomeViewState extends State<HomeView> {
                                   icon: FontAwesomeIcons.clock.data,
                                   color: AppColors.secondaryColor,
                                   buildNavigationScreen: () =>
-                                      const SizedBox.shrink(),
+                                      BlocProvider(
+                                        create: (context) {
+                                          return AdhanCubit();
+                                        },
+                                        child: const AzanView()),
                                 ),
                               ),
                             ),

@@ -1,5 +1,4 @@
 // ignore_for_file: unintended_html_in_doc_comment
-
 import 'package:athr/core/utils/app_assets.dart';
 import 'package:flutter/material.dart';
 
@@ -17,7 +16,8 @@ class PrayerTimeItemModel {
   });
 
   /// 🔹 تحويل من API → List<PrayerTimeItemModel>
-  static List<PrayerTimeItemModel> fromApi(Map<String, dynamic> json) {   // this function is used to convert the API response to a list of PrayerTimeItemModel
+  static List<PrayerTimeItemModel> fromApi(Map<String, dynamic> json) {
+    // this function is used to convert the API response to a list of PrayerTimeItemModel
     final timings = json['data']['timings'];
 
     return [
@@ -41,7 +41,7 @@ class PrayerTimeItemModel {
       ),
       PrayerTimeItemModel(
         name: "المغرب",
-        time: _formatTime(timings['Maghrib']),
+        time: '20:12',
         icon: AppAssets.magreb,
         color: const Color(0xFFF3D6D6),
       ),

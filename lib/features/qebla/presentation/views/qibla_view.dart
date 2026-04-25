@@ -12,8 +12,6 @@ import 'package:flutter_qiblah/flutter_qiblah.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-
-
 class QiblaView extends StatefulWidget {
   const QiblaView({super.key});
 
@@ -32,7 +30,7 @@ class _QiblaViewState extends State<QiblaView> with TickerProviderStateMixin {
   late Animation<double> _arrowRotationAnimation;
 
   double _currentNeedleAngle = 0.0;
-  double _targetNeedleAngle  = 0.0;
+  double _targetNeedleAngle = 0.0;
 
   @override
   void initState() {
@@ -73,11 +71,11 @@ class _QiblaViewState extends State<QiblaView> with TickerProviderStateMixin {
   Future<void> _init() async {
     await _requestPermissions();
     final support = await FlutterQiblah.androidDeviceSensorSupport() ?? false;
-  if (mounted) {
-  setState(() {
-    _deviceSupport = Future.value(support);
-  });
-}
+    if (mounted) {
+      setState(() {
+        _deviceSupport = Future.value(support);
+      });
+    }
   }
 
   Future<void> _requestPermissions() async {
@@ -95,7 +93,8 @@ class _QiblaViewState extends State<QiblaView> with TickerProviderStateMixin {
     _arrowRotationAnimation = Tween<double>(
       begin: _currentNeedleAngle,
       end: _targetNeedleAngle,
-    ).animate(CurvedAnimation(parent: _arrowRotationController, curve: Curves.easeOut));
+    ).animate(CurvedAnimation(
+        parent: _arrowRotationController, curve: Curves.easeOut));
 
     _arrowRotationController.forward(from: 0).then((_) {
       if (mounted) _currentNeedleAngle = _targetNeedleAngle;
@@ -108,32 +107,36 @@ class _QiblaViewState extends State<QiblaView> with TickerProviderStateMixin {
       backgroundColor: AppColors.bgLight,
       extendBodyBehindAppBar: true,
       appBar: _buildAppBar(),
-      body: Stack(
-        children: [
-          Positioned.fill(child: CustomPaint(painter: IslamicPatternPainter())),
-          SafeArea(
-            child: _deviceSupport == null
-                ? _loadingWidget()
-                : FutureBuilder<bool>(
-                    future: _deviceSupport,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting)
-                        return _loadingWidget();
-                      if (!(snapshot.data ?? false)) return _unsupportedWidget();
-                      return StreamBuilder<QiblahDirection>(
-                        stream: FlutterQiblah.qiblahStream,
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) return _loadingWidget();
-                          final qiblah = snapshot.data!;
-                          final needleRad = (qiblah.qiblah - qiblah.direction) * (pi / 180);
-                          _updateNeedleAngle(needleRad);
-                          return _buildUI(qiblah);
-                        },
-                      );
-                    },
-                  ),
-          ),
-        ],
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Positioned.fill(child: CustomPaint(painter: IslamicPatternPainter())),
+            SafeArea(
+              child: _deviceSupport == null
+                  ? _loadingWidget()
+                  : FutureBuilder<bool>(
+                      future: _deviceSupport,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting)
+                          return _loadingWidget();
+                        if (!(snapshot.data ?? false))
+                          return _unsupportedWidget();
+                        return StreamBuilder<QiblahDirection>(
+                          stream: FlutterQiblah.qiblahStream,
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) return _loadingWidget();
+                            final qiblah = snapshot.data!;
+                            final needleRad =
+                                (qiblah.qiblah - qiblah.direction) * (pi / 180);
+                            _updateNeedleAngle(needleRad);
+                            return _buildUI(qiblah);
+                          },
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -165,8 +168,8 @@ class _QiblaViewState extends State<QiblaView> with TickerProviderStateMixin {
 
   Widget _buildUI(QiblahDirection qiblah) {
     final compassAngle = -qiblah.direction * (pi / 180);
-    final offset       = qiblah.offset.abs();
-    final isAligned    = offset < 5;
+    final offset = qiblah.offset.abs();
+    final isAligned = offset < 5;
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -208,7 +211,8 @@ class _QiblaViewState extends State<QiblaView> with TickerProviderStateMixin {
           SizedBox(
             width: 48,
             height: 48,
-            child: CircularProgressIndicator(color: AppColors.gold, strokeWidth: 2),
+            child: CircularProgressIndicator(
+                color: AppColors.gold, strokeWidth: 2),
           ),
           const SizedBox(height: 16),
           Text(
@@ -227,7 +231,8 @@ class _QiblaViewState extends State<QiblaView> with TickerProviderStateMixin {
         children: [
           Icon(Icons.sensors_off_rounded, color: AppColors.gold, size: 48),
           const SizedBox(height: 16),
-          Text('الجهاز لا يدعم البوصلة', style: TextStyle(color: AppColors.textPrimary, fontSize: 16)),
+          Text('الجهاز لا يدعم البوصلة',
+              style: TextStyle(color: AppColors.textPrimary, fontSize: 16)),
           const SizedBox(height: 8),
           Text(
             'يرجى استخدام جهاز يحتوي على حساس مغناطيسي',
