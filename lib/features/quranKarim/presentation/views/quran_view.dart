@@ -62,9 +62,7 @@ class _QuranViewState extends State<QuranView> {
         ),
         centerTitle: true,
         leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back, color: Colors.white),
         ),
       ),
@@ -85,7 +83,7 @@ class _QuranViewState extends State<QuranView> {
                     title: 'سورة',
                     icon: FontAwesomeIcons.bookOpen.data,
                     value: 114,
-                    cardColor: Color(0xffD2E3DB),
+                    cardColor: const Color(0xffD2E3DB),
                     valueColor: AppColors.primaryColor,
                     iconColor: AppColors.primaryColor,
                     border: AppColors.primaryColor.withOpacity(0.65),
@@ -94,7 +92,7 @@ class _QuranViewState extends State<QuranView> {
                     title: 'آية',
                     icon: FontAwesomeIcons.star.data,
                     value: 6236,
-                    cardColor: Color(0xffD2E3DB),
+                    cardColor: const Color(0xffD2E3DB),
                     valueColor: AppColors.secondaryColor,
                     iconColor: AppColors.secondaryColor,
                     border: AppColors.secondaryColor.withOpacity(0.65),
@@ -103,7 +101,7 @@ class _QuranViewState extends State<QuranView> {
                     title: 'صفحة',
                     icon: FontAwesomeIcons.bookmark.data,
                     value: 604,
-                    cardColor: Color(0xffD2E3DB),
+                    cardColor: const Color(0xffD2E3DB),
                     valueColor: AppColors.primaryColor,
                     iconColor: AppColors.primaryColor,
                     border: AppColors.primaryColor.withOpacity(0.65),
@@ -132,22 +130,23 @@ class _QuranViewState extends State<QuranView> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => SurahDetailsView(),
+                                  // ✅ تمرير السورة المختارة
+                                  builder: (_) => SurahDetailsView(
+                                    surahModel: surahs[index],
+                                  ),
                                 ),
                               );
                             },
                             child: SuraItem(surahModel: surahs[index]),
                           );
                         },
-                        separatorBuilder: (BuildContext context, int index) {
-                          return Divider(
-                            height: 1,
-                            color: Colors.grey.shade400,
-                            thickness: 1,
-                            indent: 30,
-                            endIndent: 30,
-                          );
-                        },
+                        separatorBuilder: (context, index) => Divider(
+                          height: 1,
+                          color: Colors.grey.shade400,
+                          thickness: 1,
+                          indent: 30,
+                          endIndent: 30,
+                        ),
                       ),
               ),
             ),

@@ -68,7 +68,7 @@ class _ReminderViewState extends State<ReminderView> {
           builder: (context, reminders) {
            return  SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16,vertical: 20),
+              padding: const EdgeInsets.symmetric(vertical: 20,horizontal: 10),
               child: CustomScrollView(
                 physics: const BouncingScrollPhysics(),
                 slivers: [
@@ -88,11 +88,16 @@ class _ReminderViewState extends State<ReminderView> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Gap(12),
-                        AddReminderButton(
-                          onPressed: () => addReminderButtonSheet(context),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: AddReminderButton(
+                            onPressed: () => addReminderButtonSheet(context),
+                          ),
                         ),
                         const Gap(12),
-                        AdviceContainer(),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: AdviceContainer()),
                         const Gap(12),
                       ],
                     ),

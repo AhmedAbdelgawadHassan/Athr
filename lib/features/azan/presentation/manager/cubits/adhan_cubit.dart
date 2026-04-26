@@ -1,7 +1,12 @@
+// lib/features/azan/presentation/manager/cubits/adhan_cubit.dart
 import 'dart:async';
+import 'package:athr/core/services/adhan_forground_service.dart';
+import 'package:athr/core/services/notification_service.dart';
 import 'package:athr/core/services/prayer_scheduler_service.dart';
 import 'package:athr/features/azan/data/models/prayer_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:athr/features/home/data/models/prayer_time_item_model.dart';
 import 'adhan_state.dart';
@@ -17,9 +22,34 @@ class _Images {
 class AdhanCubit extends Cubit<AdhanState> {
   Timer? _uiTimer;
 
-  AdhanCubit() : super(AdhanLoading());
+  AdhanCubit() : super(AdhanLoading()) {
+    // زرار الإيقاف من الإشعار → بعت للـ FG service
+    NotificationService.onStopAdhanFromNotification = stopAdhan;
+    FlutterForegroundTask.addTaskDataCallback(_onForegroundData);
+  }
+
+  void _onForegroundData(Object data) {
+    final msg = data.toString();
+    debugPrint('📨 From FG: $msg');
+
+    if (msg.startsWith('ADHAN_STARTED:')) {
+      final prayerName = msg.replaceFirst('ADHAN_STARTED:', '');
+      final currentState = state;
+      if (currentState is AdhanLoaded) {
+        emit(currentState.copyWith(activeAdhanPrayer: prayerName));
+      }
+    }
+
+    if (msg == 'ADHAN_STOPPED') {
+      final currentState = state;
+      if (currentState is AdhanLoaded) {
+        emit(currentState.copyWith(activeAdhanPrayer: null));
+      }
+    }
+  }
 
   Future<void> loadPrayers(List<PrayerTimeItemModel> apiPrayers) async {
+    debugPrint('📥 loadPrayers called');
     emit(AdhanLoading());
     try {
       final prayers = [
@@ -30,13 +60,26 @@ class AdhanCubit extends Cubit<AdhanState> {
         PrayerModel(name: 'العشاء', nameEn: 'Isha',    time: apiPrayers[4].time, imagePath: _Images.eshaa,  isEnabled: await _loadEnabled('Isha')),
       ];
 
+      await _savePrayerTimes(prayers);
       await PrayerSchedulerService.instance.scheduleTodayPrayers(prayers);
-
+      await AdhanForegroundService.start();
       _startUiTimer(prayers);
       _emitLoaded(prayers);
+
+      debugPrint('✅ Prayers: ${prayers.map((p) => "${p.nameEn}@${p.time}").join(", ")}');
     } catch (e) {
+      debugPrint('❌ loadPrayers error: $e');
       emit(AdhanError('حدث خطأ أثناء تحميل المواقيت: $e'));
     }
+  }
+
+  Future<void> _savePrayerTimes(List<PrayerModel> prayers) async {
+    final prefs = await SharedPreferences.getInstance();
+    for (final prayer in prayers) {
+      await prefs.setString('prayer_time_${prayer.nameEn}', prayer.time);
+      await prefs.setString('prayer_name_${prayer.nameEn}', prayer.name);
+    }
+    debugPrint('💾 Prayer times saved');
   }
 
   Future<void> togglePrayer(String prayerNameEn) async {
@@ -51,8 +94,20 @@ class AdhanCubit extends Cubit<AdhanState> {
     final changed = updatedPrayers.firstWhere((p) => p.nameEn == prayerNameEn);
     await _saveEnabled(prayerNameEn, changed.isEnabled);
     await PrayerSchedulerService.instance.reschedulePrayer(changed);
-
     emit(currentState.copyWith(prayers: updatedPrayers));
+  }
+
+  // ── إيقاف الأذان: بعت للـ FG service هو اللي يوقف الصوت ──
+  Future<void> stopAdhan() async {
+    debugPrint('🛑 stopAdhan → sending to FG service');
+    // بعت أمر الإيقاف للـ FG service اللي عنده الـ AudioPlayer الحقيقي
+    AdhanForegroundService.sendStopAdhan();
+
+    // حدّث الـ UI فوراً
+    final currentState = state;
+    if (currentState is AdhanLoaded) {
+      emit(currentState.copyWith(activeAdhanPrayer: null));
+    }
   }
 
   void _emitLoaded(List<PrayerModel> prayers, {String? activeAdhan}) {
@@ -88,7 +143,12 @@ class AdhanCubit extends Cubit<AdhanState> {
     _uiTimer?.cancel();
     _uiTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       final currentState = state;
-      if (currentState is AdhanLoaded) _emitLoaded(currentState.prayers);
+      if (currentState is AdhanLoaded) {
+        _emitLoaded(
+          currentState.prayers,
+          activeAdhan: currentState.activeAdhanPrayer,
+        );
+      }
     });
   }
 
@@ -105,6 +165,8 @@ class AdhanCubit extends Cubit<AdhanState> {
   @override
   Future<void> close() {
     _uiTimer?.cancel();
+    FlutterForegroundTask.removeTaskDataCallback(_onForegroundData);
+    NotificationService.onStopAdhanFromNotification = null;
     return super.close();
   }
 }

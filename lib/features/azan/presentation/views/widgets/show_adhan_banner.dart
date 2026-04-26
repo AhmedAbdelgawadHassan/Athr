@@ -1,7 +1,10 @@
-import 'package:athr/core/services/notification_service.dart';
 import 'package:flutter/material.dart';
 
-void showAdhanBanner(BuildContext context, String prayerName) {
+void showAdhanBanner(
+  BuildContext context,
+  String prayerName, {
+  required VoidCallback onStop,
+}) {
   if (!context.mounted) return;
   final messenger = ScaffoldMessenger.of(context);
 
@@ -19,13 +22,12 @@ void showAdhanBanner(BuildContext context, String prayerName) {
       leading: const Icon(Icons.mosque_rounded, color: Colors.white),
       actions: [
         TextButton(
-          onPressed: () async {
+          onPressed: () {
             messenger.hideCurrentMaterialBanner();
-            // ✅ الدالة الصح
-            await NotificationService.instance.cancelAllAdhan();
+            onStop();
           },
           child: const Text(
-            'إغلاق',
+            '🔇 إيقاف الأذان',
             style: TextStyle(color: Color(0xFFD4AF37)),
           ),
         ),

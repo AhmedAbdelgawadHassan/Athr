@@ -22,7 +22,7 @@ class PrayerTimeItemModel {
     return [
       PrayerTimeItemModel(
         name: "الفجر",
-        time: _formatTime(timings['Fajr'], isFajr: true),
+        time: _formatTime(timings['Fajr'],isFajr: true),
         icon: AppAssets.fagr,
         color: const Color(0xFFE6E9F5),
       ),
@@ -34,7 +34,7 @@ class PrayerTimeItemModel {
       ),
       PrayerTimeItemModel(
         name: "العصر",
-        time: _formatTime(timings['Asr']),
+        time:_formatTime(timings['Asr']),
         icon: AppAssets.asr,
         color: const Color(0xFFE6D3A3),
       ),

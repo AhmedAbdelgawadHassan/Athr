@@ -1,3 +1,6 @@
+// Improved PrayerTimeContainer UI (clean, elegant, minimal)
+// ignore_for_file: deprecated_member_use
+
 import 'dart:async';
 
 import 'package:athr/core/utils/app_colors.dart';
@@ -29,20 +32,30 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
   void initState() {
     super.initState();
     _clockTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      // update time every 30 seconds
       if (!mounted) return;
-      setState(() {
-        _now = DateTime.now();
-      });
+      setState(() => _now = DateTime.now());
     });
   }
 
   @override
   void dispose() {
     _clockTimer.cancel();
-
-    /// cancel timer
     super.dispose();
+  }
+
+  String formatTo12Hour(String time) {
+    final parts = time.split(':');
+    if (parts.length < 2) return time;
+
+    int hour = int.tryParse(parts[0]) ?? 0;
+    final minute = parts[1];
+
+    String period = hour >= 12 ? 'م' : 'ص';
+
+    hour = hour % 12;
+    if (hour == 0) hour = 12;
+
+    return '$hour:$minute $period';
   }
 
   DateTime? _parsePrayerTimeToday(String time) {
@@ -58,38 +71,36 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
     if (prayers.isEmpty) return null;
 
     for (var i = 0; i < prayers.length; i++) {
-      final prayer = prayers[i];
-      final parsed = _parsePrayerTimeToday(prayer.time);
+      final parsed = _parsePrayerTimeToday(prayers[i].time);
       if (parsed == null) continue;
 
       if (_now.isBefore(parsed)) {
-        // check if current time is before parsed time
-        final previousIndex = i == 0 ? prayers.length - 1 : i - 1;
-        final previousParsed = _parsePrayerTimeToday(
-          prayers[previousIndex].time,
-        );
-        final previousTime = previousIndex == prayers.length - 1
-            ? (previousParsed ?? parsed).subtract(const Duration(days: 1))
-            : (previousParsed ?? parsed.subtract(const Duration(hours: 1)));
+        final prevIndex = i == 0 ? prayers.length - 1 : i - 1;
+        final prevParsed = _parsePrayerTimeToday(prayers[prevIndex].time);
+
+        final previousTime = prevIndex == prayers.length - 1
+            ? (prevParsed ?? parsed).subtract(const Duration(days: 1))
+            : (prevParsed ?? parsed.subtract(const Duration(hours: 1)));
 
         return _NextPrayerInfo(
-          name: prayer.name,
-          time: prayer.time,
+          name: prayers[i].name,
+          time: prayers[i].time,
           nextTime: parsed,
           previousTime: previousTime,
         );
       }
     }
 
-    final firstPrayer = prayers.first;
-    final firstParsed = _parsePrayerTimeToday(firstPrayer.time);
+    final first = prayers.first;
+    final firstParsed = _parsePrayerTimeToday(first.time);
     if (firstParsed == null) return null;
-    final prevPrayer = prayers.last;
-    final prevParsed = _parsePrayerTimeToday(prevPrayer.time);
+
+    final prev = prayers.last;
+    final prevParsed = _parsePrayerTimeToday(prev.time);
 
     return _NextPrayerInfo(
-      name: firstPrayer.name,
-      time: firstPrayer.time,
+      name: first.name,
+      time: first.time,
       nextTime: firstParsed.add(const Duration(days: 1)),
       previousTime:
           prevParsed ?? firstParsed.subtract(const Duration(hours: 1)),
@@ -98,27 +109,34 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
 
   String _formatRemaining(Duration remaining) {
     if (remaining.inSeconds <= 0) return 'الآن';
-    final hours = remaining.inHours;
-    final minutes = remaining.inMinutes.remainder(60);
-    if (hours > 0 && minutes > 0) return 'بعد $hours ساعة و $minutes دقيقة';
-    if (hours > 0) return 'بعد $hours ساعة';
-    return 'بعد $minutes دقيقة';
+    final h = remaining.inHours;
+    final m = remaining.inMinutes.remainder(60);
+    if (h > 0 && m > 0) return 'بعد $h ساعة و $m دقيقة';
+    if (h > 0) return 'بعد $h ساعة';
+    return 'بعد $m دقيقة';
   }
 
-  double _progressBetween(DateTime previous, DateTime next) {
-    final total = next.difference(previous).inSeconds;
+  double _progressBetween(DateTime prev, DateTime next) {
+    final total = next.difference(prev).inSeconds;
     if (total <= 0) return 0;
-    final passed = _now.difference(previous).inSeconds;
+    final passed = _now.difference(prev).inSeconds;
     return (passed / total).clamp(0, 1);
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -126,139 +144,151 @@ class _PrayerTimeContainerState extends State<PrayerTimeContainer> {
             builder: (context, state) {
               String title = '--';
               String time = '--:--';
-              String remainingText = 'جاري التحديث...';
-              double progressValue = 0;
+              String remaining = 'جاري التحديث...';
+              double progress = 0;
 
               if (state is SuccessPrayerTimeState) {
                 final info = _getNextPrayer(state.prayerTimeItemModels);
                 if (info != null) {
                   title = 'صلاة ${info.name}';
                   time = info.time;
-                  remainingText = _formatRemaining(
-                    info.nextTime.difference(_now),
-                  );
-                  progressValue = _progressBetween(
-                    info.previousTime,
-                    info.nextTime,
-                  );
-                } else {
-                  remainingText = 'تعذر حساب الصلاة القادمة';
+                  remaining = _formatRemaining(info.nextTime.difference(_now));
+                  progress = _progressBetween(info.previousTime, info.nextTime);
                 }
-              } else if (state is FailurePrayerTimeState) {
-                remainingText = state.errorMessage;
               }
 
               return Column(
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.primaryColor,
-                        ),
-                        child: Icon(
-                          FontAwesomeIcons.clock.data,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
-                      const Gap(10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'الصلاة القادمة',
-                            style: AppStyles.styleRegular12(
-                              context,
-                            ).copyWith(color: Color(0xff6B6B6B)),
-                          ),
-                          const Gap(5),
-                          Text(title, style: AppStyles.styleMedium24(context)),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primaryColor.withOpacity(0.08),
+                          AppColors.primaryColor.withOpacity(0.03),
                         ],
                       ),
-                      Spacer(),
-                      Column(
-                        children: [
-                          Text(
-                            time,
-                            style: AppStyles.styleMedium30(
-                              context,
-                            ).copyWith(color: AppColors.primaryColor,fontSize: 27),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.primaryColor.withOpacity(0.2),
                           ),
-                          const Gap(5),
-                          Row(
+                          child: Icon(
+                            FontAwesomeIcons.clock.data,
+                            color: AppColors.primaryColor,
+                            size: 18,
+                          ),
+                        ),
+                        const Gap(12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                width: 7,
-                                height: 7,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryColor.withValues(
-                                    alpha: 0.6,
-                                  ),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              Gap(3.5),
                               Text(
-                                remainingText,
-                                style: AppStyles.styleRegular12(
-                                  context,
-                                ).copyWith(color: Color(0xff6B6B6B)),
+                                'الصلاة القادمة',
+                                style: AppStyles.styleRegular12(context)
+                                    .copyWith(color: Colors.grey.shade600),
+                              ),
+                              const Gap(6),
+                              Text(
+                                title,
+                                style: AppStyles.styleMedium24(context),
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              formatTo12Hour(time),
+                              style: AppStyles.styleMedium24(context)
+                                  .copyWith(color: AppColors.primaryColor),
+                            ),
+                            const Gap(6),
+                            Row(
+                              children: [
+                                Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryColor,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const Gap(4),
+                                Text(
+                                  remaining,
+                                  style: AppStyles.styleRegular12(context)
+                                      .copyWith(color: Colors.grey.shade600),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  const Gap(30),
-                  Customlinearprogressindicator(
-                    padding: 20,
-                    height: 4,
-                    value: progressValue,
+
+                  const Gap(18),
+
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Customlinearprogressindicator(
+                      padding: 8,
+                      height: 6,
+                      value: progress,
+                    ),
                   ),
                 ],
               );
             },
           ),
-          const Gap(30),
+
+          const Gap(20),
+
           Divider(
-            thickness: 1,
-            color: Colors.grey.withValues(alpha: 0.5),
-            indent: 20,
-            endIndent: 20,
+            thickness: 0.7,
+            color: Colors.grey.withOpacity(0.3),
           ),
-          const Gap(12),
+
+          const Gap(14),
+
           BlocBuilder<PrayerTimeCubit, PrayerTimeStates>(
             builder: (context, state) {
               if (state is SuccessPrayerTimeState) {
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                 children: List.generate(state.prayerTimeItemModels.length, (index) {
-                  return PrayerTimeItem(
-                    prayerTimeItemModel:
-                        state.prayerTimeItemModels[index],
-                        );
-                 })
-                 );
+                  children: List.generate(
+                    state.prayerTimeItemModels.length,
+                    (i) => PrayerTimeItem(
+                      prayerTimeItemModel: state.prayerTimeItemModels[i],
+                    ),
+                  ),
+                );
+              }
 
-              } else if (state is InitialPrayerTimeState) {
+              if (state is LoadingPrayerTimeState ||
+                  state is InitialPrayerTimeState) {
                 return const PrayerItemShimmer();
-              } else if (state is FailurePrayerTimeState) {
+              }
+
+              if (state is FailurePrayerTimeState) {
                 return Center(
                   child: CustomTextError(
                     errorMessage: state.errorMessage.toString(),
                   ),
                 );
-              } else if (state is LoadingPrayerTimeState) {
-                return const PrayerItemShimmer();
-              } else {
-                return const Center(
-                  child: CustomTextError(errorMessage: 'unknown error'),
-                );
               }
+
+              return const Center(
+                child: CustomTextError(errorMessage: 'unknown error'),
+              );
             },
           ),
         ],

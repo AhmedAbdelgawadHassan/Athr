@@ -1,3 +1,6 @@
+// lib/main.dart
+import 'package:athr/core/services/adhan_audio_service.dart';
+import 'package:athr/core/services/adhan_forground_service.dart';
 import 'package:athr/core/services/notification_service.dart';
 import 'package:athr/core/services/prayer_time_service.dart';
 import 'package:athr/core/services/shared_prefrence.dart';
@@ -11,6 +14,7 @@ import 'package:device_preview/device_preview.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
@@ -19,8 +23,12 @@ void main() async {
   await Prefs.init();
   await Hive.initFlutter();
   await Hive.openBox('reminders');
-  await NotificationService.instance.init(); // ✅ بس ده كفاية
-  
+
+  // ── تهيئة الـ foreground service قبل أي حاجة ──
+  await AdhanForegroundService.init();
+
+  await NotificationService.instance.init();
+  await AdhanAudioService().init();
 
   runApp(const AthrApp());
 }
@@ -52,20 +60,23 @@ class Athr extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<LocaleCubit, Locale>(
-      builder: (context, locale) {
-        return MaterialApp(
-          locale: locale,
-          supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            fontFamily: 'cairo',
-            scaffoldBackgroundColor: const Color(0xffF5F4F1),
-          ),
-          home: const SplashView(),
-        );
-      },
+    // ← لازم WithForegroundTask يلف الـ app كله
+    return WithForegroundTask(
+      child: BlocBuilder<LocaleCubit, Locale>(
+        builder: (context, locale) {
+          return MaterialApp(
+            locale: locale,
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              fontFamily: 'cairo',
+              scaffoldBackgroundColor: const Color(0xffF5F4F1),
+            ),
+            home: const SplashView(),
+          );
+        },
+      ),
     );
   }
 }

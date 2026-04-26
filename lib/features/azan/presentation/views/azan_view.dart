@@ -1,8 +1,8 @@
+// lib/features/azan/presentation/views/azan_view.dart
 // ignore_for_file: deprecated_member_use, avoid_print
 import 'package:athr/features/azan/presentation/views/widgets/error_view.dart';
 import 'package:athr/features/azan/presentation/views/widgets/loaded_view.dart';
 import 'package:athr/features/azan/presentation/views/widgets/loading_view.dart';
-import 'package:athr/features/azan/presentation/views/widgets/show_adhan_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:athr/features/azan/presentation/manager/cubits/adhan_cubit.dart';
@@ -18,23 +18,58 @@ class AzanView extends StatefulWidget {
 }
 
 class _AzanViewState extends State<AzanView> {
+  // نحتفظ بـ reference للـ cubit عشان نستخدمه في البانر بأمان
+  late final AdhanCubit _adhanCubit;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {   // this method is called after the first frame is built and displayed on the screen
-      _tryLoadAdhan();   // this method is responsible for loading the data of the prayers
+    _adhanCubit = context.read<AdhanCubit>();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _tryLoadAdhan();
     });
   }
 
   void _tryLoadAdhan() {
-    /// get the current state of the PrayerTimeCubit
     final prayerState = context.read<PrayerTimeCubit>().state;
-
-   /// if the data is correctly loaded, load it into the AdhanCubit
+    debugPrint('🔍 PrayerState: ${prayerState.runtimeType}');
     if (prayerState is SuccessPrayerTimeState) {
-      context.read<AdhanCubit>().loadPrayers(prayerState.prayerTimeItemModels); 
+      debugPrint('✅ Calling loadPrayers');
+      _adhanCubit.loadPrayers(prayerState.prayerTimeItemModels);
     }
-    // لو لسه loading → الـ BlocListener تحت هيمسك لما تجي
+  }
+
+  void _showAdhanBanner(String prayerName) {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+
+    messenger.showMaterialBanner(
+      MaterialBanner(
+        backgroundColor: const Color(0xFF1B6B45),
+        padding: const EdgeInsets.all(16),
+        content: Text(
+          'حان وقت $prayerName 🕌',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        leading: const Icon(Icons.mosque_rounded, color: Colors.white),
+        actions: [
+          TextButton(
+            onPressed: () {
+              messenger.hideCurrentMaterialBanner();
+              // نستخدم الـ reference المحفوظة مش context.read
+              _adhanCubit.stopAdhan();
+            },
+            child: const Text(
+              '🔇 إيقاف الأذان',
+              style: TextStyle(color: Color(0xFFD4AF37)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -43,21 +78,20 @@ class _AzanViewState extends State<AzanView> {
       backgroundColor: const Color(0xFFF4F6F3),
       body: SafeArea(
         child: BlocListener<PrayerTimeCubit, PrayerTimeStates>(
-
           listener: (context, prayerState) {
             if (prayerState is SuccessPrayerTimeState) {
-              context
-                  .read<AdhanCubit>()
-                  .loadPrayers(prayerState.prayerTimeItemModels);
+              _adhanCubit.loadPrayers(prayerState.prayerTimeItemModels);
             }
           },
           child: BlocConsumer<AdhanCubit, AdhanState>(
             listener: (context, state) {
-                print('👂 listener fired, state: $state');
-              if (state is AdhanLoaded && state.activeAdhanPrayer != null) {
-                    print('🕌 showing banner: ${state.activeAdhanPrayer}');
-
-                showAdhanBanner(context, state.activeAdhanPrayer!);
+              if (state is AdhanLoaded) {
+                if (state.activeAdhanPrayer != null) {
+                  _showAdhanBanner(state.activeAdhanPrayer!);
+                } else {
+                  // الأذان وقف → أخفي البانر
+                  ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+                }
               }
             },
             builder: (context, state) {
@@ -69,10 +103,6 @@ class _AzanViewState extends State<AzanView> {
           ),
         ),
       ),
-
-
-
-      );
+    );
   }
-  }
-
+}
