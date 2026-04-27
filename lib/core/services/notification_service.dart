@@ -2,15 +2,20 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 // ── top-level function مطلوبة للـ background callback ──
 @pragma('vm:entry-point')
-void notificationTapBackground(NotificationResponse response) {
+void notificationTapBackground(NotificationResponse response) async {
   debugPrint('🔔 BG tap: actionId=${response.actionId}');
   if (response.actionId == NotificationService.stopAdhanActionId) {
-    NotificationService.onStopAdhanFromNotification?.call();
+    // ✅ الحل: نكتب الـ flag في SharedPreferences عشان الـ FG Service يشوفه
+    // (الـ static variables مش بتتشاركش بين الـ isolates)
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('stop_adhan_request', true);
+    debugPrint('✅ stop_adhan_request saved to SharedPrefs');
   }
 }
 
@@ -23,6 +28,7 @@ class NotificationService {
   bool _isInitialized = false;
 
   static const String stopAdhanActionId = 'STOP_ADHAN';
+  static const int adhanNotificationId = 999;
 
   static const Map<String, int> prayerIds = {
     'Fajr': 100,
@@ -32,7 +38,7 @@ class NotificationService {
     'Isha': 104,
   };
 
-  // يُسجَّل من AdhanCubit
+  // يُسجَّل من AdhanCubit (للـ foreground فقط)
   static void Function()? onStopAdhanFromNotification;
 
   Future<void> init() async {
@@ -102,14 +108,16 @@ class NotificationService {
         AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin == null) return;
 
-    // channel الأذان - بدون صوت لأن الصوت من audioplayers
+    // ✅ channel الأذان - بصوت الأذان الـ custom
+    // الملف لازم يكون في: android/app/src/main/res/raw/adhan.mp3
     const adhanChannel = AndroidNotificationChannel(
-      'adhan_channel',
-      'Prayer Adhan',
-      description: 'Adhan notifications for prayer times',
+      'adhan_sound_channel',
+      'Prayer Adhan Sound',
+      description: 'Adhan notifications with adhan sound',
       importance: Importance.max,
-      playSound: false,
+      playSound: true,
       enableVibration: true,
+      sound: RawResourceAndroidNotificationSound('adhan'),
     );
 
     const reminderChannel = AndroidNotificationChannel(
@@ -126,87 +134,34 @@ class NotificationService {
     debugPrint('✅ Channels created');
   }
 
-  // // ── جدولة إشعار الأذان مسبقاً ──
-  // Future<void> scheduleAdhan({
-  //   required String prayerName,
-  //   required String prayerNameEn,
-  //   required DateTime prayerTime,
-  // }) async {
-  //   if (!_isInitialized) {
-  //     debugPrint('⚠️ NotificationService not initialized!');
-  //     return;
-  //   }
-
-  //   if (!prayerTime.isAfter(DateTime.now())) {
-  //     debugPrint('⏩ Skipping $prayerNameEn - passed');
-  //     return;
-  //   }
-
-  //   final id =
-  //       prayerIds[prayerNameEn] ?? prayerNameEn.hashCode.abs() % 900 + 100;
-
-  //   final androidDetails = AndroidNotificationDetails(
-  //     'adhan_channel',
-  //     'Prayer Adhan',
-  //     importance: Importance.max,
-  //     priority: Priority.max,
-  //     playSound: false,
-  //     enableVibration: true,
-  //     fullScreenIntent: true,
-  //     ongoing: true,
-  //     autoCancel: false,
-  //     actions: const [
-  //       AndroidNotificationAction(
-  //         stopAdhanActionId,
-  //         '🔇 إيقاف الأذان',
-  //         cancelNotification: true,
-  //         showsUserInterface: false,
-  //       ),
-  //     ],
-  //   );
-
-  //   final tzTime = tz.TZDateTime.from(prayerTime, tz.local);
-
-  //   await _plugin.zonedSchedule(
-  //     id,
-  //     '🕌 حان وقت $prayerName',
-  //     'قوم صلي يبرنس يلا ',
-  //     tzTime,
-  //     NotificationDetails(
-  //       android: androidDetails,
-  //       iOS: const DarwinNotificationDetails(
-  //         interruptionLevel: InterruptionLevel.timeSensitive,
-  //         presentSound: false,
-  //       ),
-  //     ),
-  //     androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-  //     uiLocalNotificationDateInterpretation:
-  //         UILocalNotificationDateInterpretation.absoluteTime,
-  //   );
-
-  //   debugPrint('✅ Scheduled: $prayerNameEn at $tzTime');
-  // }
-
-  // ── إشعار فوري لما الأذان يبدأ فعلاً ──
-  Future<void> showActiveAdhanNotification({
+  // ── إشعار الأذان الفعلي مع صوت وزرار إيقاف ──
+  Future<void> showAdhanNotification({
     required String prayerName,
     required String prayerNameEn,
   }) async {
-    if (!_isInitialized) return;
+    if (!_isInitialized) {
+      await init();
+    }
 
-    final id =
-        prayerIds[prayerNameEn] ?? prayerNameEn.hashCode.abs() % 900 + 100;
+    // إلغاء أي إشعار أذان قديم أولاً
+    await _plugin.cancel(adhanNotificationId);
 
     final androidDetails = AndroidNotificationDetails(
-      'adhan_channel',
-      'Prayer Adhan',
+      'adhan_sound_channel',
+      'Prayer Adhan Sound',
       importance: Importance.max,
       priority: Priority.max,
-      playSound: false,
+      sound: const RawResourceAndroidNotificationSound('adhan'),
+      playSound: true,
       enableVibration: true,
-      fullScreenIntent: true,
       ongoing: true,
       autoCancel: false,
+      fullScreenIntent: true,
+      largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+      styleInformation: BigTextStyleInformation(
+        'يلا علي الصلاة يبرنس 🫵👊',
+        summaryText: prayerName,
+      ),
       actions: const [
         AndroidNotificationAction(
           stopAdhanActionId,
@@ -217,26 +172,35 @@ class NotificationService {
       ],
     );
 
-    await _plugin.show(
-      id,
-      '🕌 حان وقت $prayerName',
-      'اضغط لإيقاف الأذان',
-      NotificationDetails(
-        android: androidDetails,
-        iOS: const DarwinNotificationDetails(
-          interruptionLevel: InterruptionLevel.timeSensitive,
-          presentSound: false,
-        ),
-      ),
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+      sound: 'adhan.mp3',
+      interruptionLevel: InterruptionLevel.timeSensitive,
     );
 
-    debugPrint('🔔 Active adhan shown: $prayerNameEn');
+    await _plugin.show(
+      adhanNotificationId,
+      '🕌 حان وقت صلاة $prayerName',
+      'يلا علي الصلاة يبرنس 🫵👊',
+      NotificationDetails(android: androidDetails, iOS: iosDetails),
+    );
+
+    debugPrint('🔔 Adhan notification shown for: $prayerNameEn');
+  }
+
+  // ── إلغاء إشعار الأذان ──
+  Future<void> cancelAdhanNotification() async {
+    await _plugin.cancel(adhanNotificationId);
+    debugPrint('🗑️ Adhan notification cancelled');
   }
 
   Future<void> cancelAdhan(String prayerNameEn) async {
     final id =
         prayerIds[prayerNameEn] ?? prayerNameEn.hashCode.abs() % 900 + 100;
     await _plugin.cancel(id);
+    await _plugin.cancel(adhanNotificationId);
     debugPrint('🗑️ Cancelled: $prayerNameEn');
   }
 
@@ -244,6 +208,7 @@ class NotificationService {
     for (final id in prayerIds.values) {
       await _plugin.cancel(id);
     }
+    await _plugin.cancel(adhanNotificationId);
     debugPrint('🗑️ Cancelled all adhan');
   }
 

@@ -23,8 +23,9 @@ class AdhanCubit extends Cubit<AdhanState> {
   Timer? _uiTimer;
 
   AdhanCubit() : super(AdhanLoading()) {
-    // زرار الإيقاف من الإشعار → بعت للـ FG service
+    // ✅ زرار الإيقاف من الإشعار
     NotificationService.onStopAdhanFromNotification = stopAdhan;
+    // ✅ استقبل رسائل من الـ FG service
     FlutterForegroundTask.addTaskDataCallback(_onForegroundData);
   }
 
@@ -33,14 +34,27 @@ class AdhanCubit extends Cubit<AdhanState> {
     debugPrint('📨 From FG: $msg');
 
     if (msg.startsWith('ADHAN_STARTED:')) {
-      final prayerName = msg.replaceFirst('ADHAN_STARTED:', '');
+      // ✅ Format: ADHAN_STARTED:arabicName:englishName
+      final parts = msg.replaceFirst('ADHAN_STARTED:', '').split(':');
+      final arabicName = parts[0];
+      final englishName = parts.length > 1 ? parts[1] : parts[0];
+
+      // ✅ بعت الإشعار من الـ main isolate — هنا الكود شغال صح
+      NotificationService.instance.showAdhanNotification(
+        prayerName: arabicName,
+        prayerNameEn: englishName,
+      );
+
       final currentState = state;
       if (currentState is AdhanLoaded) {
-        emit(currentState.copyWith(activeAdhanPrayer: prayerName));
+        emit(currentState.copyWith(activeAdhanPrayer: arabicName));
       }
     }
 
     if (msg == 'ADHAN_STOPPED') {
+      // ✅ إلغاء الإشعار
+      NotificationService.instance.cancelAdhanNotification();
+
       final currentState = state;
       if (currentState is AdhanLoaded) {
         emit(currentState.copyWith(activeAdhanPrayer: null));
@@ -52,6 +66,9 @@ class AdhanCubit extends Cubit<AdhanState> {
     debugPrint('📥 loadPrayers called');
     emit(AdhanLoading());
     try {
+      // ✅ تأكد إن الـ NotificationService اتهيأ
+      await NotificationService.instance.init();
+
       final prayers = [
         PrayerModel(name: 'الفجر',  nameEn: 'Fajr',    time: apiPrayers[0].time, imagePath: _Images.fagr,   isEnabled: await _loadEnabled('Fajr')),
         PrayerModel(name: 'الظهر',  nameEn: 'Dhuhr',   time: apiPrayers[1].time, imagePath: _Images.dohr,   isEnabled: await _loadEnabled('Dhuhr')),
@@ -97,13 +114,13 @@ class AdhanCubit extends Cubit<AdhanState> {
     emit(currentState.copyWith(prayers: updatedPrayers));
   }
 
-  // ── إيقاف الأذان: بعت للـ FG service هو اللي يوقف الصوت ──
   Future<void> stopAdhan() async {
-    debugPrint('🛑 stopAdhan → sending to FG service');
-    // بعت أمر الإيقاف للـ FG service اللي عنده الـ AudioPlayer الحقيقي
+    debugPrint('🛑 stopAdhan called');
+    // ✅ أوقف الصوت عبر الـ FG service
     AdhanForegroundService.sendStopAdhan();
+    // ✅ إلغاء الإشعار فوراً
+    await NotificationService.instance.cancelAdhanNotification();
 
-    // حدّث الـ UI فوراً
     final currentState = state;
     if (currentState is AdhanLoaded) {
       emit(currentState.copyWith(activeAdhanPrayer: null));

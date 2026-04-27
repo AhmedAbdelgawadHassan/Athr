@@ -29,10 +29,8 @@ class _LanguageViewState extends State<LanguageView> {
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Stack(
-     clipBehavior: Clip.none,
-            children:[ 
-               Positioned(
+          child: Stack(clipBehavior: Clip.none, children: [
+            Positioned(
               top: -250,
               right: -190,
               child: drawCircle(
@@ -52,23 +50,25 @@ class _LanguageViewState extends State<LanguageView> {
                 borderWidth: 5,
               ),
             ),
-          
-              Column(
+            Column(
               children: [
                 const Gap(20),
-                HeaderItem(icone: Icons.language, color: AppColors.primaryColor),
+                HeaderItem(
+                    icone: Icons.language, color: AppColors.primaryColor),
                 const Gap(10),
                 Text('اختار اللغة', style: AppStyles.styleMedium30(context)),
                 const Gap(5),
                 Text(
                   'Select Your Preferred Language',
                   textAlign: TextAlign.center,
-                  style: AppStyles.styleRegular16(context).copyWith(color: Color(0xff6B6B6B)),
+                  style: AppStyles.styleRegular16(context)
+                      .copyWith(color: Color(0xff6B6B6B)),
                 ),
                 Gap(20),
                 Expanded(
                   child: ListView.builder(
-                    itemCount:Languagelisttileitemmodel.languageListtileitems.length,
+                    itemCount:
+                        Languagelisttileitemmodel.languageListtileitems.length,
                     itemBuilder: (context, index) {
                       return GestureDetector(
                         onTap: () {
@@ -80,8 +80,8 @@ class _LanguageViewState extends State<LanguageView> {
                           padding: const EdgeInsets.symmetric(vertical: 7),
                           child: LanguageListtile(
                             isActive: currentIndex == index,
-                            languagelisttileitemmodel:
-                                Languagelisttileitemmodel.languageListtileitems[index],
+                            languagelisttileitemmodel: Languagelisttileitemmodel
+                                .languageListtileitems[index],
                           ),
                         ),
                       );
@@ -96,12 +96,17 @@ class _LanguageViewState extends State<LanguageView> {
                   ),
                   onPressed: () {
                     final selectedLanguage = languageCodes[currentIndex];
-                  BlocProvider.of<LocaleCubit>(context).changeLanguage(selectedLanguage);// Trigger Cubit
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const LocationView()));
+                    BlocProvider.of<LocaleCubit>(context)
+                        .changeLanguage(selectedLanguage); // Trigger Cubit
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LocationView()));
                   },
                   child: Text(
-                   'متابعة',
-                    style: AppStyles.styleMedium18(context).copyWith(color: Colors.white),
+                    'متابعة',
+                    style: AppStyles.styleMedium18(context)
+                        .copyWith(color: Colors.white),
                   ),
                 ),
                 Gap(30),

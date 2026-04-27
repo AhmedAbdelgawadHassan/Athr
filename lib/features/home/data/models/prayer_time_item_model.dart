@@ -34,7 +34,7 @@ class PrayerTimeItemModel {
       ),
       PrayerTimeItemModel(
         name: "العصر",
-        time:_formatTime(timings['Asr']),
+        time: _formatTime(timings['Asr']),
         icon: AppAssets.asr,
         color: const Color(0xFFE6D3A3),
       ),

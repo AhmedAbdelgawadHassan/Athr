@@ -20,10 +20,10 @@ class AdhanAudioService {
             isSpeakerphoneOn: true,
             stayAwake: true,
             contentType: AndroidContentType.music,
+            // ✅ alarm عشان يشتغل حتى لو الموبايل على silent أو vibrate
             usageType: AndroidUsageType.alarm,
             audioFocus: AndroidAudioFocus.gain,
           ),
-          // ✅ حذف defaultToSpeaker - مش مسموح إلا مع playAndRecord
           iOS: AudioContextIOS(
             category: AVAudioSessionCategory.playback,
             options: {AVAudioSessionOptions.mixWithOthers},
@@ -40,7 +40,6 @@ class AdhanAudioService {
       debugPrint('✅ AdhanAudioService initialized');
     } catch (e) {
       debugPrint('❌ AdhanAudioService init error: $e');
-      // حتى لو فشل الـ init، نفضل نحاول نشغل
       _isInitialized = true;
     }
   }

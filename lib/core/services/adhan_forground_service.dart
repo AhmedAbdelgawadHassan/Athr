@@ -58,8 +58,8 @@ class AdhanTaskHandler extends TaskHandler {
 
         // ✅ حدّث نص الـ FG notification نفسه بدل flutter_local_notifications
         await FlutterForegroundTask.updateService(
-          notificationTitle: '🕌 حان وقت $arabicName',
-          notificationText: 'اضغط لفتح التطبيق وإيقاف الأذان',
+          notificationTitle: '🕌 حان وقت صلاة $arabicName',
+          notificationText: 'يلا علي الصلاة يبرنس 🫵👊',
         );
 
         // ✅ أبلّغ الـ main isolate

@@ -1,9 +1,9 @@
-// lib/main.dart
 import 'package:athr/core/services/adhan_audio_service.dart';
 import 'package:athr/core/services/adhan_forground_service.dart';
 import 'package:athr/core/services/notification_service.dart';
 import 'package:athr/core/services/prayer_time_service.dart';
 import 'package:athr/core/services/shared_prefrence.dart';
+import 'package:athr/features/azan/presentation/manager/cubits/adhan_cubit.dart';
 import 'package:athr/features/home/data/repos/prayer_time_repo_impl.dart';
 import 'package:athr/features/home/presentation/manager/cubits/prayer_time_cubit.dart/prayer_time_cubit.dart';
 import 'package:athr/features/home/presentation/manager/cubits/prayer_time_cubit.dart/prayer_time_states.dart';
@@ -24,9 +24,7 @@ void main() async {
   await Hive.initFlutter();
   await Hive.openBox('reminders');
 
-  // ── تهيئة الـ foreground service قبل أي حاجة ──
   await AdhanForegroundService.init();
-
   await NotificationService.instance.init();
   await AdhanAudioService().init();
 
@@ -49,6 +47,9 @@ class AthrApp extends StatelessWidget {
             ),
           ),
         ),
+        // ✅ AdhanCubit هنا عشان يفضل شغال طول عمر التطبيق
+        // ويستقبل رسائل الـ FG service حتى لو AzanView مش مفتوحة
+        BlocProvider(create: (_) => AdhanCubit()),
       ],
       child: DevicePreview(enabled: false, builder: (context) => const Athr()),
     );
@@ -60,7 +61,6 @@ class Athr extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ← لازم WithForegroundTask يلف الـ app كله
     return WithForegroundTask(
       child: BlocBuilder<LocaleCubit, Locale>(
         builder: (context, locale) {
