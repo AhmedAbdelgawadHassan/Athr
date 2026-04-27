@@ -20,6 +20,7 @@ class SuraItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Container(
         decoration: BoxDecoration(
+          border: Border.all(color: Colors.black12, width: 1),
           borderRadius: BorderRadius.circular(16),
           gradient: LinearGradient(
             colors: [Colors.white, accent.withValues(alpha: 0.09)],

@@ -12,6 +12,7 @@ import 'package:athr/features/home/presentation/views/widgets/home_item.dart';
 import 'package:athr/features/home/presentation/views/widgets/home_top_section.dart';
 import 'package:athr/features/home/presentation/views/widgets/today_aya_container.dart';
 import 'package:athr/features/qebla/presentation/views/qibla_view.dart';
+import 'package:athr/features/quiz/presentation/view/quiz_view.dart';
 import 'package:athr/features/quranKarim/presentation/views/quran_view.dart';
 import 'package:athr/features/reminder/presentation/manager/cubits/reminder_cubit.dart';
 import 'package:athr/features/reminder/presentation/views/reminder_view.dart';
@@ -167,12 +168,12 @@ class _HomeViewState extends State<HomeView> {
                             Expanded(
                               child: HomeItem(
                                 homeItemModel: HomeItemModel(
-                                  title: 'المساجد',
-                                  subtitle: 'أقرب المساجد',
-                                  icon: Icons.location_on_outlined,
+                                  title: 'اختبر نفسك',
+                                  subtitle: 'عشر أسألة يوميا',
+                                  icon: Icons.quiz,
                                   color: AppColors.secondaryColor,
                                   buildNavigationScreen: () =>
-                                      const SizedBox.shrink(),
+                                      const QuizView()
                                 ),
                               ),
                             ),

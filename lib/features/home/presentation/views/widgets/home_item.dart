@@ -25,6 +25,7 @@ class HomeItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
+
           borderRadius: BorderRadius.circular(24),
           gradient: LinearGradient(
             colors: [
@@ -35,7 +36,7 @@ class HomeItem extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
           border: Border.all(
-            color: homeItemModel.color.withOpacity(0.15),
+            color: Colors.black26,
             width: 1,
           ),
         ),
